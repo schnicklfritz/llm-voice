@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  llm:
+    build:
+      context: ./llm
+      dockerfile: Dockerfile
+    image: dolphin-mixtral-vllm:latest
+    container_name: dolphin-mixtral-vllm
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL=${LLM_MODEL:-TheBloke/dolphin-2.9.2-mixtral-8x7b-AWQ}
+      - QUANTIZATION=awq
+      - GPU_MEMORY_UTILIZATION=0.9
+      - TENSOR_PARALLEL_SIZE=2
+      - MAX_MODEL_LEN=32768
+      - HOST=0.0.0.0
+      - PORT=8000
+    volumes:
+      - llm-models:/root/.cache/huggingface/hub
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 2
+              capabilities: [gpu]
+    networks:
+      - llm-voice-net
+    restart: unless-stopped
+
+  tts:
+    build:
+      context: ./tts
+      dockerfile: Dockerfile
+    image: fish-speech-tts:latest
+    container_name: fish-speech-tts
+    ports:
+      - "8001:8001"
+    environment:
+      - MODEL=fish-speech-s2-pro
+      - DEVICE=cuda
+      - HOST=0.0.0.0
+      - PORT=8001
+    volumes:
+      - tts-models:/root/.cache/fish-speech
+      - ./voices:/voices:ro  # optional voice reference audio
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - llm-voice-net
+    restart: unless-stopped
+
+  orchestrator:
+    build:
+      context: ./orchestrator
+      dockerfile: Dockerfile
+    image: llm-voice-orchestrator:latest
+    container_name: llm-voice-orchestrator
+    ports:
+      - "8002:8002"
+    environment:
+      - LLM_URL=http://llm:8000/v1
+      - TTS_URL=http://tts:8001/generate
+      - MODEL_NAME=${LLM_MODEL:-TheBloke/dolphin-2.9.2-mixtral-8x7b-AWQ}
+      - OPENAI_API_KEY=dummy
+      - HOST=0.0.0.0
+      - PORT=8002
+    depends_on:
+      - llm
+      - tts
+    networks:
+      - llm-voice-net
+    restart: unless-stopped
+
+volumes:
+  llm-models:
+  tts-models:
+
+networks:
+  llm-voice-net:
+    driver: bridge
+
+# Note: This compose file expects NVIDIA Container Toolkit installed on the host.
+# For quickpod.io, ensure the host has three GPUs and the Docker daemon is configured
+# with `--runtime=nvidia` or the nvidia-container-runtime is set as default.
