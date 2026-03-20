@@ -53,6 +53,44 @@ GPUs are allocated as follows:
    ./tests/test_health.sh
    ```
 
+## CI/CD: Building with GitHub Actions and Docker Hub
+
+This repository includes a GitHub Actions workflow (`.github/workflows/build‑push.yml`) that automatically builds the three Docker images on every push to the `main` branch and pushes them to Docker Hub.
+
+### Prerequisites
+
+1. Docker Hub repository names:
+  - `yourusername/dolphin‑mixtral‑vllm`
+  - `yourusername/fish‑speech‑tts`
+  - `yourusername/llm‑voice‑orchestrator`
+
+  Create these repositories on Docker Hub (or adjust the workflow to use your own naming).
+
+2. GitHub Secrets:
+  - `DOCKERHUB_USERNAME` – your Docker Hub username.
+  - `DOCKERHUB_TOKEN` – a Docker Hub access token with write permissions.
+
+  Add these secrets in your GitHub repository settings under **Settings → Secrets and variables → Actions**.
+
+### Using Pre‑built Images
+
+Once the workflow runs successfully, you can deploy the pre‑built images on quickpod.io using the production compose file:
+
+```bash
+export DOCKERHUB_USERNAME=yourusername
+docker‑compose -f docker‑compose.prod.yml up -d
+```
+
+The production compose file (`docker‑compose.prod.yml`) references the images from Docker Hub and does not require local building.
+
+### Manual Building
+
+If you prefer to build locally, use the provided `deploy.sh` script or run `docker‑compose up --build`.
+
+## Deployment on Quickpod.io (Separate Pods)
+
+If you are using quickpod.io and need to rent separate GPU pods for each service (recommended), see the detailed guide [QUICKPOD.md](QUICKPOD.md).
+
 ## Configuration
 
 ### Environment Variables
