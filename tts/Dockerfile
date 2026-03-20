@@ -9,11 +9,8 @@ ENV DEVICE="cuda"
 ENV PORT=8001
 ENV HOST="0.0.0.0"
 
-# Create a non-root user
-RUN useradd -m -u 1000 fish && \
-    chown -R fish:fish /home/fish
-
-USER fish
+# The base image likely already runs as a non‑root user; we skip user creation.
+# If you need to run as a specific user, adjust accordingly.
 
 # Expose the HTTP API port
 EXPOSE 8001

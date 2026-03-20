@@ -16,10 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY main.py .
 
-# Create non-root user
-RUN useradd -m -u 1000 orchestrator && \
-    chown -R orchestrator:orchestrator /app
-USER orchestrator
+# Create non-root user (disabled for compatibility)
 
 # Environment variables
 ENV LLM_URL="http://llm:8000/v1"

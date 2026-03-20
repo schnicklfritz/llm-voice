@@ -12,11 +12,11 @@ ENV MAX_MODEL_LEN=32768
 ENV HOST="0.0.0.0"
 ENV PORT="8000"
 
-# Create a non-root user for security
-RUN useradd -m -u 1000 vllm && \
-    chown -R vllm:vllm /home/vllm
-
-USER vllm
+# The base image runs as root; we keep root for simplicity.
+# If you need a non‑root user, uncomment the lines below and adjust.
+# RUN useradd -m -u 1000 vllm && \
+#     chown -R vllm:vllm /home/vllm
+# USER vllm
 
 # Expose the OpenAI API port
 EXPOSE 8000
