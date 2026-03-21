@@ -37,7 +37,7 @@ services:
     image: fish-speech-tts:latest
     container_name: fish-speech-tts
     ports:
-      - "8001:8001"
+      - "8080:8080"
     environment:
       - MODEL=fish-speech-s2-pro
       - DEVICE=cuda
@@ -67,7 +67,7 @@ services:
       - "8002:8002"
     environment:
       - LLM_URL=http://llm:8000/v1
-      - TTS_URL=http://tts:8001/generate
+      - TTS_URL=http://tts:8080/v1/tts
       - MODEL_NAME=${LLM_MODEL:-TheBloke/dolphin-2.9.2-mixtral-8x7b-AWQ}
       - OPENAI_API_KEY=dummy
       - HOST=0.0.0.0
