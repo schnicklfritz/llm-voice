@@ -47,7 +47,6 @@ jobs:
 
     - name: Build & Push Orchestrator Image (if exists)
       uses: docker/build-push-action@v6
-      if: hashFiles('orchestrator/Dockerfile') != ''
       with:
         context: ./orchestrator
         file: ./Dockerfile.orchestrator
