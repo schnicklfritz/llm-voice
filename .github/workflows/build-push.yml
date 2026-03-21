@@ -32,7 +32,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        file: ./llm/Dockerfile  # Adjust if your Dockerfile is named differently (e.g., Dockerfile.llm)
+        file: ./Dockerfile.llm  # Adjust if your Dockerfile is named differently (e.g., Dockerfile.llm)
         push: ${{ github.event_name != 'pull_request' }}
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/llm:main
@@ -50,7 +50,7 @@ jobs:
       if: hashFiles('orchestrator/Dockerfile') != ''
       with:
         context: ./orchestrator
-        file: ./orchestrator/Dockerfile
+        file: ./Dockerfile.orchestrator
         push: ${{ github.event_name != 'pull_request' }}
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/orchestrator:main
