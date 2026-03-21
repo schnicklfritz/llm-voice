@@ -10,11 +10,11 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
-COPY orchestrator/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY orchestrator/main.py .
+COPY main.py .
 
 # Environment variables (no change)
 ENV LLM_URL="http://llm:8000/v1"
