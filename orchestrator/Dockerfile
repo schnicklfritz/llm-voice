@@ -18,7 +18,7 @@ COPY orchestrator/main.py .
 
 # Environment variables (no change)
 ENV LLM_URL="http://llm:8000/v1"
-ENV TTS_URL="http://tts:8001/generate"
+ENV TTS_URL="http://tts:8080/v1/tts"
 ENV MODEL_NAME="TheBloke/dolphin-2.9.2-mixtral-8x7b-AWQ"
 ENV OPENAI_API_KEY="dummy"
 ENV HOST="0.0.0.0"

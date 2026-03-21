@@ -1,5 +1,3 @@
-# .github/workflows/docker-build-push.yml
-
 name: Build & Push Docker Images
 
 on:
@@ -31,8 +29,8 @@ jobs:
     - name: Build & Push LLM Image
       uses: docker/build-push-action@v6
       with:
-        context: .
-        file: ./Dockerfile.llm  # Adjust if your Dockerfile is named differently (e.g., Dockerfile.llm)
+        context: ./llm
+        file: ./llm/Dockerfile
         push: ${{ github.event_name != 'pull_request' }}
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/llm:main
@@ -49,7 +47,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: ./orchestrator
-        file: ./Dockerfile.orchestrator
+        file: ./orchestrator/Dockerfile
         push: ${{ github.event_name != 'pull_request' }}
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/orchestrator:main
@@ -61,3 +59,4 @@ jobs:
           org.opencontainers.image.source=${{ github.repositoryUrl }}
           org.opencontainers.image.revision=${{ github.sha }}
         provenance: false
+
