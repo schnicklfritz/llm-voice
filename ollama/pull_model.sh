@@ -1,6 +1,12 @@
 #!/bin/bash
 MODEL=${1:-"huihui_ai/qwen3-abliterated:32b"}
 
+echo "Waiting for Ollama daemon..."
+until ollama list > /dev/null 2>81; do
+    sleep 2
+done
+echo "Daemon ready."
+
 echo "Pulling $MODEL..."
 ollama pull $MODEL
 
