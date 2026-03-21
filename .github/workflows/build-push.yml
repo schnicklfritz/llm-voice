@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [llm, tts, orchestrator]
+        service: [llm, orchestrator]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
