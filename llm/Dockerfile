@@ -1,21 +1,22 @@
-FROM vllm/vllm-openai:latest
+FROM ollama/ollama:latest
 
-ENV MODEL="huihui-ai/Qwen2.5-72B-Instruct-abliterated" \
-     QUANTIZATION="awq" \
-     GPU_MEMORY_UTILIZATION=0.90 \
-     TENSOR_PARALLEL_SIZE=2 \
-     MAX_MODEL_LEN=16384 \
-     HOST="0.0.0.0" \
-     PORT="8000"
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    apt-utils \
+    curl \
+    nano \
+    wget \
+    netcat-openbsd \
+    iputils-ping \
+    net-tools \
+    iproute2 \
+    dnsutils \
+    lsof \
+    htop \
+    && rm -rf /var/lib/apt/lists/*
 
-EXPOSE 8000
+COPY pull_model.sh /usr/local/bin/pull_model.sh
+RUN chmod +x /usr/local/bin/pull_model.sh
 
-CMD python -m vllm.entrypoints.openai.api_server \
-     --model ${MODEL} \
-     --quantization ${QUANTIZATION} \
-     --gpu-memory-utilization ${GPU_MEMORY_UTILIZATION} \
-     --tensor-parallel-size ${TENSOR_PARALLEL_SIZE} \
-     --max-model-len ${MAX_MODEL_LEN} \
-     --host ${HOST} \
-     --port ${PORT}
+EXPOSE 11434
 
+CMD ["ollama", "serve"]
