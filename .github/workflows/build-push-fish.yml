@@ -35,37 +35,3 @@ jobs:
             schnicklbob/llm-voice-fish:${{ github.sha }}
           cache-from: type=gha,scope=fish
           cache-to: type=gha,mode=max,scope=fish
-```
-
-**Updated repo structure:**
-```
-schnicklfritz/llm-voice/
-├── .github/workflows/
-│   ├── build-push-ollama.yml
-│   ├── build-push-fish.yml       ← new
-│   └── build-push-orchestrator.yml
-├── ollama/
-│   ├── Dockerfile
-│   └── pull_model.sh
-├── fish/
-│   ├── Dockerfile                ← new
-│   └── fish_start.sh             ← new
-├── orchestrator/
-│   ├── Dockerfile
-│   ├── main.py
-│   ├── requirements.txt
-│   └── ui.html
-└── scripts/
-    └── validate_stack.sh
-```
-
-**Updated Fish QuickPod template:**
-```
-Docker Image: schnicklbob/llm-voice-fish:latest
-Launch Mode: SSH Entry
-Docker Options:
-  --gpus all
-  -p 8080:8080
-  -e NVIDIA_VISIBLE_DEVICES=all
-Entrypoint: blank
-On Start Scripts: blank
