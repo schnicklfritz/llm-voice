@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Voice</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #080808;
+    --surface:  #101010;
+    --surface2: #161616;
+    --border:   #1e1e1e;
+    --border2:  #2a2a2a;
+    --accent:   #e8ff00;
+    --accent2:  #ff3c00;
+    --accent3:  #00d4ff;
+    --text:     #e0e0e0;
+    --muted:    #4a4a4a;
+    --muted2:   #666666;
+    --radius:   2px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2.5rem 1.5rem 4rem;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 3px,
+      rgba(255,255,255,0.008) 3px, rgba(255,255,255,0.008) 4px
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 700px;
+  }
+
+  /* ---- Header ---- */
+  header {
+    margin-bottom: 2.5rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1rem;
+  }
+
+  .title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    letter-spacing: 0.06em;
+    line-height: 0.9;
+  }
+
+  .title span { color: var(--accent); }
+
+  .subtitle {
+    font-size: 0.55rem;
+    color: var(--muted2);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-align: right;
+    line-height: 1.8;
+  }
+
+  /* ---- Cards ---- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .card-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .card-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ---- Mode ---- */
+  .mode-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .mode-btn {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--muted2);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.55rem;
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: all 0.12s ease;
+  }
+
+  .mode-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .mode-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+    font-weight: 500;
+  }
+
+  /* ---- Tone chips ---- */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .chip {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--muted2);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.65rem;
+    cursor: pointer;
+    border-radius: 1px;
+    transition: all 0.12s ease;
+  }
+
+  .chip:hover { border-color: var(--accent3); color: var(--accent3); }
+
+  .chip.active {
+    background: var(--accent3);
+    border-color: var(--accent3);
+    color: #000;
+  }
+
+  .custom-tone {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    outline: none;
+    transition: border-color 0.12s ease;
+    font-style: italic;
+  }
+
+  .custom-tone:focus { border-color: var(--accent3); }
+  .custom-tone::placeholder { color: var(--muted); }
+
+  /* ---- Sliders ---- */
+  .slider-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .slider-group { display: flex; flex-direction: column; gap: 0.4rem; }
+
+  .slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .slider-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted2);
+  }
+
+  .slider-val {
+    font-size: 0.7rem;
+    color: var(--accent);
+  }
+
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+    height: 2px;
+  }
+
+  .slider-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.5rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-top: 0.1rem;
+  }
+
+  /* ---- Length ---- */
+  .length-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .length-btn {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--muted2);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: all 0.12s ease;
+  }
+
+  .length-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .length-btn.active {
+    background: var(--accent2);
+    border-color: var(--accent2);
+    color: #fff;
+  }
+
+  /* ---- Prompt ---- */
+  textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 1.65;
+    padding: 0.875rem;
+    resize: vertical;
+    min-height: 90px;
+    outline: none;
+    transition: border-color 0.12s ease;
+  }
+
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+
+  .prompt-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.75rem;
+  }
+
+  .hint {
+    font-size: 0.5rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  .speak-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    color: #000;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.15rem;
+    letter-spacing: 0.12em;
+    padding: 0.55rem 2rem;
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+
+  .speak-btn:hover:not(:disabled) {
+    background: #fff;
+    transform: translateY(-1px);
+  }
+
+  .speak-btn:disabled {
+    background: var(--muted);
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .speak-btn.loading { background: var(--accent2); animation: pulse 0.9s ease infinite; }
+  .speak-btn.playing { background: var(--accent3); }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
+
+  /* ---- Visualizer ---- */
+  .viz-card { display: none; padding: 1rem 1.25rem; }
+  .viz-card.visible { display: block; }
+
+  .viz-inner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 36px;
+    flex: 1;
+  }
+
+  .bar {
+    flex: 1;
+    max-width: 5px;
+    background: var(--accent);
+    border-radius: 1px;
+    height: 3px;
+    transition: height 0.07s ease;
+  }
+
+  .bar.alt { background: var(--accent3); }
+
+  .viz-status {
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted2);
+    min-width: 6rem;
+    text-align: right;
+  }
+
+  .viz-status.active { color: var(--accent); }
+
+  /* ---- Response ---- */
+  .response-card { display: none; }
+  .response-card.visible { display: block; }
+
+  .response-text {
+    font-size: 0.75rem;
+    line-height: 1.75;
+    color: var(--muted2);
+    white-space: pre-wrap;
+  }
+
+  .response-text .tag {
+    color: var(--accent3);
+    font-style: italic;
+  }
+
+  /* ---- Error ---- */
+  .error-msg {
+    display: none;
+    font-size: 0.65rem;
+    color: var(--accent2);
+    margin-top: 0.6rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--accent2);
+    border-radius: var(--radius);
+    letter-spacing: 0.03em;
+  }
+
+  .error-msg.visible { display: block; }
+
+  /* ---- Footer ---- */
+  footer {
+    margin-top: 2.5rem;
+    font-size: 0.5rem;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  @media (max-width: 480px) {
+    .slider-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div>
+      <div class="title">LLM<br><span>VOICE</span></div>
+    </div>
+    <div class="subtitle">
+      Ollama · Fish Speech<br>
+      Streaming · Uncensored
+    </div>
+  </header>
+
+  <!-- Mode -->
+  <div class="card">
+    <div class="card-label">Mode</div>
+    <div class="mode-row">
+      <button class="mode-btn active" data-mode="conversational">Conversational</button>
+      <button class="mode-btn" data-mode="story">Storyteller</button>
+    </div>
+  </div>
+
+  <!-- Tone -->
+  <div class="card">
+    <div class="card-label">Tone</div>
+    <div class="chips">
+      <button class="chip active" data-tone="casual">Casual</button>
+      <button class="chip" data-tone="formal">Formal</button>
+      <button class="chip" data-tone="unhinged">Unhinged</button>
+      <button class="chip" data-tone="deadpan">Deadpan</button>
+      <button class="chip" data-tone="dramatic">Dramatic</button>
+      <button class="chip" data-tone="conspiratorial">Conspiratorial</button>
+      <button class="chip" data-tone="hype">Hype</button>
+      <button class="chip" data-tone="noir">Noir</button>
+    </div>
+    <input
+      class="custom-tone"
+      id="customTone"
+      type="text"
+      placeholder="Or describe a custom voice… e.g. Victorian aristocrat who just stepped on a Lego"
+    >
+  </div>
+
+  <!-- Controls -->
+  <div class="card">
+    <div class="card-label">Controls</div>
+    <div class="slider-grid">
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-label">Speed</span>
+          <span class="slider-val" id="speedVal">1.0×</span>
+        </div>
+        <input type="range" id="speed" min="0.5" max="2.0" step="0.1" value="1.0">
+        <div class="slider-ticks"><span>0.5×</span><span>1.0×</span><span>2.0×</span></div>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-label">Emotion Intensity</span>
+          <span class="slider-val" id="intensityVal">3</span>
+        </div>
+        <input type="range" id="intensity" min="1" max="5" step="1" value="3">
+        <div class="slider-ticks"><span>Subtle</span><span>Moderate</span><span>Extreme</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Length -->
+  <div class="card">
+    <div class="card-label">Response Length</div>
+    <div class="length-row">
+      <button class="length-btn" data-length="short">Short<br><span style="font-size:0.5rem;opacity:0.6">~50 words</span></button>
+      <button class="length-btn active" data-length="medium">Medium<br><span style="font-size:0.5rem;opacity:0.6">~150 words</span></button>
+      <button class="length-btn" data-length="long">Long<br><span style="font-size:0.5rem;opacity:0.6">~300 words</span></button>
+    </div>
+  </div>
+
+  <!-- Prompt -->
+  <div class="card">
+    <div class="card-label">Prompt</div>
+    <textarea id="prompt" placeholder="Ask something or give a storytelling prompt…&#10;&#10;Ctrl+Enter to speak"></textarea>
+    <div class="prompt-footer">
+      <span class="hint">Ctrl+Enter to speak</span>
+      <button class="speak-btn" id="speakBtn">SPEAK</button>
+    </div>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <!-- Visualizer -->
+  <div class="card viz-card" id="vizCard">
+    <div class="viz-inner">
+      <div class="bars" id="bars"></div>
+      <span class="viz-status" id="vizStatus">Waiting</span>
+    </div>
+  </div>
+
+  <!-- Response -->
+  <div class="card response-card" id="responseCard">
+    <div class="card-label">LLM Output</div>
+    <div class="response-text" id="responseText"></div>
+  </div>
+
+  <footer>schnicklfritz / llm-voice &nbsp;·&nbsp; quickpod</footer>
+
+</div>
+
+<audio id="audio"></audio>
+
+<script>
+  // ---- State ----
+  let currentMode      = 'conversational';
+  let currentTone      = 'casual';
+  let currentLength    = 'medium';
+  let mediaSource      = null;
+  let sourceBuffer     = null;
+  let audioQueue       = [];
+  let isAppending      = false;
+  let streamDone       = false;
+  let animFrame        = null;
+
+  // ---- Mode ----
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentMode = btn.dataset.mode;
+    });
+  });
+
+  // ---- Tone chips ----
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentTone = chip.dataset.tone;
+      document.getElementById('customTone').value = '';
+    });
+  });
+
+  document.getElementById('customTone').addEventListener('input', () => {
+    if (document.getElementById('customTone').value.trim()) {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    }
+  });
+
+  // ---- Length ----
+  document.querySelectorAll('.length-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.length-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentLength = btn.dataset.length;
+    });
+  });
+
+  // ---- Sliders ----
+  const speedSlider = document.getElementById('speed');
+  const speedVal    = document.getElementById('speedVal');
+  speedSlider.addEventListener('input', () => {
+    speedVal.textContent = parseFloat(speedSlider.value).toFixed(1) + '×';
+  });
+
+  const intensitySlider = document.getElementById('intensity');
+  const intensityVal    = document.getElementById('intensityVal');
+  intensitySlider.addEventListener('input', () => {
+    intensityVal.textContent = intensitySlider.value;
+  });
+
+  // ---- Visualizer bars ----
+  const barsEl = document.getElementById('bars');
+  for (let i = 0; i < 32; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'bar' + (i % 3 === 0 ? ' alt' : '');
+    barsEl.appendChild(bar);
+  }
+
+  function animateBars(on) {
+    const bars = barsEl.querySelectorAll('.bar');
+    if (!on) {
+      if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+      bars.forEach(b => b.style.height = '3px');
+      return;
+    }
+    function tick() {
+      bars.forEach(b => { b.style.height = (Math.random() * 30 + 4) + 'px'; });
+      animFrame = requestAnimationFrame(tick);
+    }
+    tick();
+  }
+
+  function setStatus(text, active) {
+    const el = document.getElementById('vizStatus');
+    el.textContent = text;
+    el.classList.toggle('active', active);
+  }
+
+  // ---- Speak ----
+  document.getElementById('speakBtn').addEventListener('click', speak);
+  document.getElementById('prompt').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) speak();
+  });
+
+  async function speak() {
+    const promptEl  = document.getElementById('prompt');
+    const prompt    = promptEl.value.trim();
+    if (!prompt) return;
+
+    const btn        = document.getElementById('speakBtn');
+    const errorMsg   = document.getElementById('errorMsg');
+    const vizCard    = document.getElementById('vizCard');
+    const respCard   = document.getElementById('responseCard');
+    const respText   = document.getElementById('responseText');
+    const audio      = document.getElementById('audio');
+    const customTone = document.getElementById('customTone').value.trim();
+
+    // Reset
+    errorMsg.classList.remove('visible');
+    respText.textContent = '';
+    audio.pause();
+    if (mediaSource && mediaSource.readyState === 'open') {
+      try { mediaSource.endOfStream(); } catch(e) {}
+    }
+    audioQueue = []; isAppending = false; streamDone = false;
+
+    btn.disabled = true;
+    btn.classList.add('loading');
+    btn.textContent = 'THINKING...';
+    vizCard.classList.add('visible');
+    setStatus('Connecting', true);
+    animateBars(false);
+
+    const payload = {
+      prompt,
+      mode:              currentMode,
+      tone:              currentTone,
+      custom_tone:       customTone || null,
+      emotion_intensity: parseInt(intensitySlider.value),
+      length:            currentLength,
+      format:            'mp3',
+      speed:             parseFloat(speedSlider.value),
+      stream:            true
+    };
+
+    try {
+      const resp = await fetch('/speak', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload)
+      });
+
+      if (!resp.ok) {
+        const text = await resp.text();
+        throw new Error(text || resp.statusText);
+      }
+
+      // MediaSource streaming
+      mediaSource = new MediaSource();
+      audio.src = URL.createObjectURL(mediaSource);
+
+      mediaSource.addEventListener('sourceopen', async () => {
+        try {
+          sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
+        } catch(e) {
+          throw new Error('Browser does not support MP3 streaming: ' + e.message);
+        }
+        sourceBuffer.addEventListener('updateend', processQueue);
+
+        btn.textContent = 'STREAMING...';
+        setStatus('Buffering', true);
+
+        const reader = resp.body.getReader();
+        let firstChunk = true;
+        let fullText = '';
+
+        // We can't get text from the audio stream — show prompt as placeholder
+        respCard.classList.add('visible');
+        respText.innerHTML = '<em style="color:var(--muted)">Generating…</em>';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            streamDone = true;
+            processQueue();
+            break;
+          }
+          audioQueue.push(value);
+          if (firstChunk) {
+            firstChunk = false;
+            processQueue();
+          }
+        }
+      });
+
+      audio.addEventListener('playing', () => {
+        setStatus('Playing', true);
+        animateBars(true);
+        btn.classList.remove('loading');
+        btn.classList.add('playing');
+        btn.textContent = 'PLAYING';
+        respText.innerHTML = '<em style="color:var(--muted2)">Audio streaming…</em>';
+      });
+
+      audio.addEventListener('ended', () => {
+        setStatus('Done', false);
+        animateBars(false);
+        respText.innerHTML = '<em style="color:var(--muted)">Complete.</em>';
+        resetBtn();
+      });
+
+      audio.play().catch(() => {});
+
+    } catch(err) {
+      errorMsg.textContent = '⚠ ' + err.message;
+      errorMsg.classList.add('visible');
+      vizCard.classList.remove('visible');
+      animateBars(false);
+      resetBtn();
+    }
+  }
+
+  function processQueue() {
+    if (isAppending || !sourceBuffer || sourceBuffer.updating) return;
+    if (audioQueue.length === 0) {
+      if (streamDone && mediaSource && mediaSource.readyState === 'open') {
+        try { mediaSource.endOfStream(); } catch(e) {}
+      }
+      return;
+    }
+    const chunk = audioQueue.shift();
+    try {
+      sourceBuffer.appendBuffer(chunk);
+    } catch(e) {
+      console.warn('appendBuffer:', e);
+    }
+  }
+
+  function resetBtn() {
+    const btn = document.getElementById('speakBtn');
+    btn.disabled = false;
+    btn.classList.remove('loading', 'playing');
+    btn.textContent = 'SPEAK';
+  }
+</script>
+</body>
+</html>
