@@ -117,32 +117,34 @@ async def speak(req: SpeakRequest):
         llm_resp.raise_for_status()
         generated_text = llm_resp.json()["message"]["content"]
 
-        # 2. TTS
-        tts_payload = {
-            "text": generated_text,
-            "format": req.format,
-            "mp3_bitrate": 128,
-            "streaming": req.stream,
-            "prosody": {"speed": req.speed, "volume": 0}
-        }
-        if req.voice_reference_audio_b64:
-            tts_payload["references"] = [{
-                "audio": req.voice_reference_audio_b64,
-                "text": req.voice_reference_text or generated_text[:100]
-            }]
+    # TTS payload
+    tts_payload = {
+        "text": generated_text,
+        "format": req.format,
+        "mp3_bitrate": 128,
+        "streaming": req.stream,
+        "prosody": {"speed": req.speed, "volume": 0}
+    }
+    if req.voice_reference_audio_b64:
+        tts_payload["references"] = [{
+            "audio": req.voice_reference_audio_b64,
+            "text": req.voice_reference_text or generated_text[:100]
+        }]
 
-        media_type = MEDIA_TYPES.get(req.format, "audio/mpeg")
+    media_type = MEDIA_TYPES.get(req.format, "audio/mpeg")
 
-        if req.stream:
-            async def stream_audio():
-                async with client.stream(
+    if req.stream:
+        async def stream_audio():
+            async with httpx.AsyncClient(timeout=120) as stream_client:
+                async with stream_client.stream(
                     "POST", f"{FISH_URL}/v1/tts", json=tts_payload
                 ) as r:
                     async for chunk in r.aiter_bytes():
                         yield chunk
 
-            return StreamingResponse(stream_audio(), media_type=media_type)
-        else:
-            tts_resp = await client.post(f"{FISH_URL}/v1/tts", json=tts_payload)
+        return StreamingResponse(stream_audio(), media_type=media_type)
+    else:
+        async with httpx.AsyncClient(timeout=120) as tts_client:
+            tts_resp = await tts_client.post(f"{FISH_URL}/v1/tts", json=tts_payload)
             tts_resp.raise_for_status()
             return Response(content=tts_resp.content, media_type=media_type)
