@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     net-tools \
     iproute2 \
     dnsutils \
+    procps \
+    lsof \
+    htop \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -20,4 +23,4 @@ COPY main.py .
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "debug"]
