@@ -1,7 +1,9 @@
 import os
 import re
 import json
+import base64
 import httpx
+import ormsgpack
 from fastapi import FastAPI
 from fastapi.responses import Response, StreamingResponse, HTMLResponse
 from pydantic import BaseModel
@@ -67,8 +69,7 @@ Place tags immediately before the word or phrase they apply to.
 {tone}
 {intensity}
 {length}
-Never break character. Never add disclaimers or meta-commentary.
-/no_think"""
+Never break character. Never add disclaimers or meta-commentary."""
 
 CONFIG_PATH = "/app/config.json"
 
@@ -105,7 +106,8 @@ class SpeakRequest(BaseModel):
     voice_reference_text: Optional[str] = None
     format: str = "mp3"
     speed: float = 1.0
-    stream: bool = True
+    stream: bool = False
+    think: Optional[bool] = None
     messages: Optional[List[Message]] = None
 
 
@@ -165,10 +167,12 @@ async def speak(req: SpeakRequest):
     cfg    = get_config()
     system = build_system_prompt(req, cfg)
 
-    # Build messages array — use conversation history if provided
+    # Determine think mode — request overrides config
+    use_think = req.think if req.think is not None else cfg.get("think", False)
+
+    # Build messages array
     if req.messages:
         messages = [{"role": m.role, "content": m.content} for m in req.messages]
-        # Inject system prompt as first message if not already there
         if not messages or messages[0]["role"] != "system":
             messages.insert(0, {"role": "system", "content": system})
     else:
@@ -177,58 +181,63 @@ async def speak(req: SpeakRequest):
             {"role": "user",   "content": req.prompt}
         ]
 
+    # Append /no_think to last user message when thinking disabled
+    if not use_think:
+        for i in range(len(messages) - 1, -1, -1):
+            if messages[i]["role"] == "user":
+                messages[i]["content"] += " /no_think"
+                break
+
     async with httpx.AsyncClient(timeout=300) as client:
-        # 1. LLM
         llm_resp = await client.post(
             f"{OLLAMA_URL}/api/chat",
             json={
                 "model":    LLM_MODEL,
                 "stream":   False,
-                "think":    cfg.get("think", False),
+                "think":    use_think,
                 "messages": messages
             }
         )
         llm_resp.raise_for_status()
         generated_text = llm_resp.json()["message"]["content"]
 
-    # Strip thinking tags
+    # Always strip thinking tags — even if thinking was enabled
     generated_text = re.sub(r'<think>.*?</think>', '', generated_text, flags=re.DOTALL).strip()
 
-    # TTS payload
+    # Build TTS payload using msgpack (required for voice cloning with binary audio)
     tts_payload = {
-        "text":        generated_text,
-        "format":      req.format,
-        "mp3_bitrate": 128,
-        "streaming":   req.stream,
-        "prosody":     {"speed": req.speed, "volume": 0}
+        "text":      generated_text,
+        "format":    req.format,
+        "streaming": False,
+        "prosody":   {"speed": req.speed, "volume": 0}
     }
+
+    if req.format == "mp3":
+        tts_payload["mp3_bitrate"] = 128
+
+    # Voice cloning — decode b64 to raw bytes, send via msgpack
+    use_msgpack = False
     if req.voice_reference_audio_b64:
+        audio_bytes = base64.b64decode(req.voice_reference_audio_b64)
         tts_payload["references"] = [{
-            "audio": req.voice_reference_audio_b64,
+            "audio": audio_bytes,
             "text":  req.voice_reference_text or generated_text[:100]
         }]
+        use_msgpack = True  # msgpack required for binary audio
 
     media_type = MEDIA_TYPES.get(req.format, "audio/mpeg")
 
-# Force WAV for streaming — Fish only supports WAV stream
-    if req.stream:
-        tts_payload["format"] = "wav"
-        tts_payload.pop("mp3_bitrate", None)
-        media_type = "audio/wav"
-
-        async def stream_audio():
-            async with httpx.AsyncClient(timeout=300) as stream_client:
-                async with stream_client.stream(
-                    "POST", f"{FISH_URL}/v1/tts", json=tts_payload
-                ) as r:
-                    async for chunk in r.aiter_bytes():
-                        yield chunk
-
-        return StreamingResponse(stream_audio(), media_type=media_type)
-    else:
-        tts_payload["format"] = req.format
-        media_type = MEDIA_TYPES.get(req.format, "audio/mpeg")
-        async with httpx.AsyncClient(timeout=300) as tts_client:
+    async with httpx.AsyncClient(timeout=300) as tts_client:
+        if use_msgpack:
+            # Serialize with msgpack for binary audio support
+            packed = ormsgpack.packb(tts_payload, option=ormsgpack.OPT_SERIALIZE_NUMPY)
+            tts_resp = await tts_client.post(
+                f"{FISH_URL}/v1/tts",
+                content=packed,
+                headers={"Content-Type": "application/msgpack"}
+            )
+        else:
             tts_resp = await tts_client.post(f"{FISH_URL}/v1/tts", json=tts_payload)
-            tts_resp.raise_for_status()
-            return Response(content=tts_resp.content, media_type=media_type)
+
+        tts_resp.raise_for_status()
+        return Response(content=tts_resp.content, media_type=media_type)

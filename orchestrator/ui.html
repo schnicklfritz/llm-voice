@@ -325,6 +325,10 @@
       <label class="toggle-switch"><input type="checkbox" id="historyToggle"><span class="toggle-slider"></span></label>
       <span class="toggle-label">Remember conversation history</span>
     </div>
+    <div class="conv-toggle-row">
+      <label class="toggle-switch"><input type="checkbox" id="thinkToggle"><span class="toggle-slider"></span></label>
+      <span class="toggle-label">Thinking mode (slower, smarter)</span>
+    </div>
   </div>
 
   <!-- Character -->
@@ -487,6 +491,7 @@ let currentMode   = 'conversational';
 let currentTone   = 'casual';
 let currentLength = 'medium';
 let useHistory    = false;
+let useThink      = false;
 let conversationHistory = [];
 let lastPrompt    = null;
 let lastRespText  = '';
@@ -537,6 +542,10 @@ document.querySelectorAll('[data-mode]').forEach(btn => {
 document.getElementById('historyToggle').addEventListener('change', e => {
   useHistory = e.target.checked;
   if (!useHistory) conversationHistory = [];
+});
+
+document.getElementById('thinkToggle').addEventListener('change', e => {
+  useThink = e.target.checked;
 });
 
 // ============================================================
@@ -833,6 +842,7 @@ async function speak(overridePrompt) {
     format:            'mp3',
     speed:             parseFloat(speedSlider.value),
     stream:            false,
+    think:             useThink,
     voice_reference_audio_b64: voiceB64 || null,
     voice_reference_text:      voiceText || null,
     messages:          histMsgs,
