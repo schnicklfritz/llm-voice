@@ -857,19 +857,11 @@ async function speak(overridePrompt) {
     });
 
     if (!resp.ok) { const t = await resp.text(); throw new Error(t || resp.statusText); }
-try {
-    const resp = await fetch('/speak', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      signal: abortCtrl.signal,
-    });
-
-    if (!resp.ok) { const t = await resp.text(); throw new Error(t || resp.statusText); }
 
     btn.textContent = 'LOADING…';
     setStatus('Loading', true);
 
+    // Read full response as blob — simple and reliable
     const arrayBuf = await resp.arrayBuffer();
     clearTimers();
 
@@ -899,48 +891,11 @@ try {
       resetBtn();
     }, { once: true });
 
+    // Save to audio history
     const histBlob = new Blob([arrayBuf], { type: 'audio/mpeg' });
     addToHistory(prompt, URL.createObjectURL(histBlob));
 
     audio.play().catch(e => { throw new Error('Playback failed: ' + e.message); });
-
-  } catch(err) {
-    clearTimers();
-    if (err.name === 'AbortError') return;
-    errorMsg.textContent = '⚠ ' + err.message;
-    errorMsg.classList.add('visible');
-    vizCard.classList.remove('visible');
-    animateBars(false);
-    resetBtn();
-  }
-}
-      // Save to audio history
-      const blob = new Blob(chunks, { type: 'audio/mpeg' });
-      const url  = URL.createObjectURL(blob);
-      addToHistory(prompt, url);
-    });
-
-    audio.addEventListener('playing', () => {
-      clearTimers();
-      setStatus('Playing', true);
-      animateBars(true);
-      btn.classList.remove('loading'); btn.classList.add('playing');
-      btn.textContent = 'PLAYING';
-      respText.innerHTML = '<em style="color:var(--muted2)">Audio streaming…</em>';
-    });
-
-    audio.addEventListener('ended', () => {
-      setStatus('Done', false);
-      animateBars(false);
-      regenBtn.classList.add('visible');
-      if (useHistory) {
-        conversationHistory.push({ role: 'user', content: prompt });
-        if (conversationHistory.length > 20) conversationHistory = conversationHistory.slice(-20);
-      }
-      resetBtn();
-    });
-
-    audio.play().catch(() => {});
 
   } catch(err) {
     clearTimers();
