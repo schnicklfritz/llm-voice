@@ -5,7 +5,7 @@ import httpx
 from fastapi import FastAPI
 from fastapi.responses import Response, StreamingResponse, HTMLResponse
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 app = FastAPI()
 
@@ -46,8 +46,14 @@ LENGTH_PROMPTS = {
 }
 
 BASE_PROMPT = """You are a vivid, expressive voice performer.
-Annotate your response with Fish Speech emotion tags to enhance delivery.
-Available tags: [laughing] [whispers] [excited] [sad] [angry] [fearful] [surprised] [disgusted] [calm] [cheerful] [melancholic] [sarcastic] [pause] [emphasis] [laughing] [inhale] [chuckle] [tsk] [singing] [excited] [laughing tone] [interrupting] [chuckling] [excited tone] [volume up] [echo] [angry] [low volume] [sigh] [low voice] [whisper] [screaming] [shouting] [loud] [surprised] [short pause] [exhale] [delight] [panting] [audience laughter] [with strong accent] [volume down] [clearing throat] [sad] [moaning] [shocked] [voice breaking] [professional broadcast tone] [pitch up] [super happy] [barely audible] [voice cracking with emotion] [long pause] [nervous laugh] [deep breath] [trembling voice] [monotone] [whimpering] [giggling] [dramatic pause] [hushed] [breathless] [slow] [fast] [drawn out] [clipped] [staccato] [flowing]
+Annotate your response with Fish Speech S2 inline emotion tags to enhance delivery.
+Use [square bracket] syntax with natural language descriptions at the word or phrase level.
+Examples: [laughing] [whisper] [excited] [sad] [angry] [shouting] [sigh] [pause]
+[chuckle] [voice breaking] [low voice] [emphasis] [inhale] [exhale] [shocked]
+[audience laughter] [clearing throat] [singing] [echo] [panting] [delight]
+[super happy] [barely audible] [voice cracking with emotion] [long pause] [nervous laugh]
+[deep breath] [trembling voice] [monotone] [whimpering] [giggling] [dramatic pause]
+[hushed] [breathless] [slow] [fast] [drawn out] [clipped] [staccato] [flowing]
 [rhythmic] [rushed] [deliberate] [raspy] [breathy] [gravelly] [smooth] [nasal]
 [resonant] [hollow] [thin voice] [full voice] [theatrical] [deadpan delivery]
 [over the top] [understated] [dry] [sardonic] [wistful] [bitter] [nostalgic]
@@ -55,7 +61,9 @@ Available tags: [laughing] [whispers] [excited] [sad] [angry] [fearful] [surpris
 [catching breath] [swallowing] [clicking tongue] [energetic] [exhausted] [drowsy]
 [alert] [sluggish] [frantic] [calm and collected] [pitch down] [pitch up]
 [whisper quiet] [gradually louder] [gradually softer] [peak volume] [murmur]
-Place tags inline immediately before the word or phrase they apply to.
+You can also invent free-form descriptions — anything descriptive works.
+Place tags immediately before the word or phrase they apply to.
+{character}
 {tone}
 {intensity}
 {length}
@@ -74,11 +82,14 @@ DEFAULT_CONFIG = {
 def get_config():
     try:
         with open(CONFIG_PATH) as f:
-            cfg = json.load(f)
-            # merge with defaults so missing keys don't break anything
-            return {**DEFAULT_CONFIG, **cfg}
+            return {**DEFAULT_CONFIG, **json.load(f)}
     except:
         return DEFAULT_CONFIG
+
+
+class Message(BaseModel):
+    role: str
+    content: str
 
 
 class SpeakRequest(BaseModel):
@@ -88,12 +99,14 @@ class SpeakRequest(BaseModel):
     custom_tone: Optional[str] = None
     emotion_intensity: Optional[int] = None
     length: Optional[str] = None
+    character: Optional[str] = None
     system_prompt: Optional[str] = None
     voice_reference_audio_b64: Optional[str] = None
     voice_reference_text: Optional[str] = None
     format: str = "mp3"
     speed: float = 1.0
     stream: bool = True
+    messages: Optional[List[Message]] = None
 
 
 def build_system_prompt(req: SpeakRequest, cfg: dict) -> str:
@@ -111,7 +124,12 @@ def build_system_prompt(req: SpeakRequest, cfg: dict) -> str:
     if req.mode == "story":
         tone_text = f"Tell a funny, vivid personal anecdote. Build to a punchline. {tone_text}"
 
+    character_text = ""
+    if req.character:
+        character_text = f"Character definition: {req.character}"
+
     return BASE_PROMPT.format(
+        character=character_text,
         tone=tone_text,
         intensity=intensity_text,
         length=length_text
@@ -147,6 +165,18 @@ async def speak(req: SpeakRequest):
     cfg    = get_config()
     system = build_system_prompt(req, cfg)
 
+    # Build messages array — use conversation history if provided
+    if req.messages:
+        messages = [{"role": m.role, "content": m.content} for m in req.messages]
+        # Inject system prompt as first message if not already there
+        if not messages or messages[0]["role"] != "system":
+            messages.insert(0, {"role": "system", "content": system})
+    else:
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user",   "content": req.prompt}
+        ]
+
     async with httpx.AsyncClient(timeout=300) as client:
         # 1. LLM
         llm_resp = await client.post(
@@ -154,17 +184,14 @@ async def speak(req: SpeakRequest):
             json={
                 "model":    LLM_MODEL,
                 "stream":   False,
-                "think":    cfg["think"],
-                "messages": [
-                    {"role": "system", "content": system},
-                    {"role": "user",   "content": req.prompt}
-                ]
+                "think":    cfg.get("think", False),
+                "messages": messages
             }
         )
         llm_resp.raise_for_status()
         generated_text = llm_resp.json()["message"]["content"]
 
-    # Strip any internal thinking tags
+    # Strip thinking tags
     generated_text = re.sub(r'<think>.*?</think>', '', generated_text, flags=re.DOTALL).strip()
 
     # TTS payload

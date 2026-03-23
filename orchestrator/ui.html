@@ -7,18 +7,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:       #080808;
-    --surface:  #101010;
-    --surface2: #161616;
-    --border:   #1e1e1e;
-    --border2:  #2a2a2a;
-    --accent:   #e8ff00;
-    --accent2:  #ff3c00;
-    --accent3:  #00d4ff;
-    --text:     #e0e0e0;
-    --muted:    #4a4a4a;
-    --muted2:   #666666;
-    --radius:   2px;
+    --bg:      #080808;
+    --surface: #101010;
+    --border:  #1e1e1e;
+    --border2: #2a2a2a;
+    --accent:  #e8ff00;
+    --accent2: #ff3c00;
+    --accent3: #00d4ff;
+    --accent4: #ff9500;
+    --text:    #e0e0e0;
+    --muted:   #4a4a4a;
+    --muted2:  #666666;
+    --radius:  2px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,7 +31,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 2.5rem 1.5rem 4rem;
+    padding: 2rem 1.5rem 5rem;
     overflow-x: hidden;
   }
 
@@ -39,558 +39,271 @@
     content: '';
     position: fixed;
     inset: 0;
-    background: repeating-linear-gradient(
-      0deg, transparent, transparent 3px,
-      rgba(255,255,255,0.008) 3px, rgba(255,255,255,0.008) 4px
-    );
+    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.007) 3px, rgba(255,255,255,0.007) 4px);
     pointer-events: none;
     z-index: 0;
   }
 
-  .container {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: 700px;
-  }
+  .container { position: relative; z-index: 1; width: 100%; max-width: 720px; }
 
-  /* ---- Header ---- */
   header {
-    margin-bottom: 2.5rem;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    border-bottom: 1px solid var(--border); padding-bottom: 1rem;
   }
-
-  .title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(2.5rem, 8vw, 5rem);
-    letter-spacing: 0.06em;
-    line-height: 0.9;
-  }
-
+  .title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.2rem, 7vw, 4.5rem); letter-spacing: 0.06em; line-height: 0.9; }
   .title span { color: var(--accent); }
+  .subtitle { font-size: 0.5rem; color: var(--muted2); letter-spacing: 0.2em; text-transform: uppercase; text-align: right; line-height: 1.9; }
 
-  .subtitle {
-    font-size: 0.55rem;
-    color: var(--muted2);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    text-align: right;
-    line-height: 1.8;
-  }
-
-  /* ---- Cards ---- */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.25rem;
-    margin-bottom: 0.75rem;
-  }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem; margin-bottom: 0.6rem; }
 
   .card-label {
-    font-size: 0.55rem;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    font-size: 0.52rem; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 0.7rem;
+    display: flex; align-items: center; gap: 0.5rem;
   }
+  .card-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-  .card-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
+  .collapsible-header {
+    width: 100%; background: transparent; border: none;
+    color: var(--muted2); font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.52rem; letter-spacing: 0.25em; text-transform: uppercase;
+    cursor: pointer; display: flex; align-items: center; gap: 0.5rem;
+    padding: 0; text-align: left; transition: color 0.12s ease;
   }
+  .collapsible-header:hover { color: var(--accent); }
+  .collapsible-header::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .collapsible-header .arrow { font-size: 0.45rem; transition: transform 0.2s ease; margin-left: 0.2rem; }
+  .collapsible-header.open { color: var(--accent); }
+  .collapsible-header.open .arrow { transform: rotate(180deg); }
+  .collapsible-body { display: none; margin-top: 0.9rem; }
+  .collapsible-body.open { display: block; }
 
-  /* ---- Mode ---- */
-  .mode-row {
-    display: flex;
-    gap: 0.5rem;
+  .btn-row { display: flex; gap: 0.4rem; }
+  .seg-btn {
+    flex: 1; background: transparent; border: 1px solid var(--border2);
+    color: var(--muted2); font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 0.5rem 0.25rem; cursor: pointer; border-radius: var(--radius); transition: all 0.12s ease;
   }
+  .seg-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .seg-btn.active  { background: var(--accent);  border-color: var(--accent);  color: #000; font-weight: 500; }
+  .seg-btn.active2 { background: var(--accent2); border-color: var(--accent2); color: #fff; }
 
-  .mode-btn {
-    flex: 1;
-    background: transparent;
-    border: 1px solid var(--border2);
-    color: var(--muted2);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.6rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    padding: 0.55rem;
-    cursor: pointer;
-    border-radius: var(--radius);
-    transition: all 0.12s ease;
-  }
-
-  .mode-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  .mode-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #000;
-    font-weight: 500;
-  }
-
-  /* ---- Tone chips ---- */
-  .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-bottom: 0.75rem;
-  }
-
+  .chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.7rem; }
   .chip {
-    background: transparent;
-    border: 1px solid var(--border2);
-    color: var(--muted2);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.6rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 0.35rem 0.65rem;
-    cursor: pointer;
-    border-radius: 1px;
-    transition: all 0.12s ease;
+    background: transparent; border: 1px solid var(--border2); color: var(--muted2);
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.55rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 0.3rem 0.55rem; cursor: pointer; border-radius: 1px; transition: all 0.12s ease;
   }
-
   .chip:hover { border-color: var(--accent3); color: var(--accent3); }
+  .chip.active { background: var(--accent3); border-color: var(--accent3); color: #000; }
 
-  .chip.active {
-    background: var(--accent3);
-    border-color: var(--accent3);
-    color: #000;
+  textarea, input[type=text] {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius); color: var(--text);
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem;
+    line-height: 1.6; padding: 0.75rem; outline: none; transition: border-color 0.12s ease;
   }
+  textarea { resize: vertical; }
+  textarea:focus, input[type=text]:focus { border-color: var(--accent); }
+  textarea::placeholder, input[type=text]::placeholder { color: var(--muted); }
+  .input-sm { font-size: 0.72rem; padding: 0.55rem 0.7rem; }
+  .input-label { font-size: 0.5rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 0.35rem; margin-top: 0.6rem; }
+  .input-label:first-child { margin-top: 0; }
 
-  .custom-tone {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.75rem;
-    padding: 0.6rem 0.75rem;
-    outline: none;
-    transition: border-color 0.12s ease;
-    font-style: italic;
-  }
+  .slider-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+  .slider-group { display: flex; flex-direction: column; gap: 0.35rem; }
+  .slider-header { display: flex; justify-content: space-between; align-items: baseline; }
+  .slider-label { font-size: 0.5rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted2); }
+  .slider-val { font-size: 0.65rem; color: var(--accent); }
+  input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; height: 2px; }
+  .slider-ticks { display: flex; justify-content: space-between; font-size: 0.45rem; color: var(--muted); margin-top: 0.1rem; }
 
-  .custom-tone:focus { border-color: var(--accent3); }
-  .custom-tone::placeholder { color: var(--muted); }
-
-  /* ---- Sliders ---- */
-  .slider-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
-
-  .slider-group { display: flex; flex-direction: column; gap: 0.4rem; }
-
-  .slider-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-  }
-
-  .slider-label {
-    font-size: 0.55rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--muted2);
-  }
-
-  .slider-val {
-    font-size: 0.7rem;
-    color: var(--accent);
-  }
-
-  input[type=range] {
-    width: 100%;
-    accent-color: var(--accent);
-    cursor: pointer;
-    height: 2px;
-  }
-
-  .slider-ticks {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.5rem;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-    margin-top: 0.1rem;
-  }
-
-  /* ---- Length ---- */
-  .length-row {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .length-btn {
-    flex: 1;
-    background: transparent;
-    border: 1px solid var(--border2);
-    color: var(--muted2);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.6rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    padding: 0.5rem;
-    cursor: pointer;
-    border-radius: var(--radius);
-    transition: all 0.12s ease;
-  }
-
-  .length-btn:hover { border-color: var(--accent2); color: var(--accent2); }
-
-  .length-btn.active {
-    background: var(--accent2);
-    border-color: var(--accent2);
-    color: #fff;
-  }
-
-  /* ---- Prompt ---- */
-  textarea {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.82rem;
-    line-height: 1.65;
-    padding: 0.875rem;
-    resize: vertical;
-    min-height: 90px;
-    outline: none;
-    transition: border-color 0.12s ease;
-  }
-
-  textarea:focus { border-color: var(--accent); }
-  textarea::placeholder { color: var(--muted); }
-
-  .prompt-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 0.75rem;
-  }
-
-  .hint {
-    font-size: 0.5rem;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-  }
+  .speak-row { display: flex; gap: 0.5rem; margin-top: 0.7rem; align-items: center; }
+  .hint { font-size: 0.48rem; color: var(--muted); letter-spacing: 0.06em; flex: 1; }
 
   .speak-btn {
-    background: var(--accent);
-    border: none;
-    border-radius: var(--radius);
-    color: #000;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.15rem;
-    letter-spacing: 0.12em;
-    padding: 0.55rem 2rem;
-    cursor: pointer;
-    transition: all 0.12s ease;
+    background: var(--accent); border: none; border-radius: var(--radius);
+    color: #000; font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.05rem; letter-spacing: 0.12em;
+    padding: 0.5rem 1.75rem; cursor: pointer; transition: all 0.12s ease; flex-shrink: 0;
   }
-
-  .speak-btn:hover:not(:disabled) {
-    background: #fff;
-    transform: translateY(-1px);
-  }
-
-  .speak-btn:disabled {
-    background: var(--muted);
-    cursor: not-allowed;
-    transform: none;
-  }
-
+  .speak-btn:hover:not(:disabled) { background: #fff; transform: translateY(-1px); }
+  .speak-btn:disabled { background: var(--muted); cursor: not-allowed; transform: none; }
   .speak-btn.loading { background: var(--accent2); animation: pulse 0.9s ease infinite; }
   .speak-btn.playing { background: var(--accent3); }
 
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
-
-  /* ---- Visualizer ---- */
-  .viz-card { display: none; padding: 1rem 1.25rem; }
-  .viz-card.visible { display: block; }
-
-  .viz-inner {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+  .icon-btn {
+    background: transparent; border: 1px solid var(--border2); color: var(--muted2);
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.55rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.45rem 0.75rem; cursor: pointer; border-radius: var(--radius);
+    transition: all 0.12s ease; flex-shrink: 0; display: none;
   }
+  .icon-btn.visible { display: block; }
+  .icon-btn.stop { border-color: var(--accent2); color: var(--accent2); }
+  .icon-btn.stop:hover { background: var(--accent2); color: #fff; }
+  .icon-btn:not(.stop):hover { border-color: var(--accent); color: var(--accent); }
 
-  .bars {
-    display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    height: 36px;
-    flex: 1;
-  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 
-  .bar {
-    flex: 1;
-    max-width: 5px;
-    background: var(--accent);
-    border-radius: 1px;
-    height: 3px;
-    transition: height 0.07s ease;
-  }
-
-  .bar.alt { background: var(--accent3); }
-
-  .viz-status {
-    font-size: 0.55rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--muted2);
-    min-width: 6rem;
-    text-align: right;
-  }
-
-  .viz-status.active { color: var(--accent); }
-
-  /* ---- Response ---- */
-  .response-card { display: none; }
-  .response-card.visible { display: block; }
-
-  .response-text {
-    font-size: 0.75rem;
-    line-height: 1.75;
-    color: var(--muted2);
-    white-space: pre-wrap;
-  }
-
-  .response-text .tag {
-    color: var(--accent3);
-    font-style: italic;
-  }
-
-  /* ---- Error ---- */
-  .error-msg {
-    display: none;
-    font-size: 0.65rem;
-    color: var(--accent2);
-    margin-top: 0.6rem;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--accent2);
-    border-radius: var(--radius);
-    letter-spacing: 0.03em;
-  }
-
+  .error-msg { display: none; font-size: 0.62rem; color: var(--accent2); margin-top: 0.6rem; padding: 0.45rem 0.7rem; border: 1px solid var(--accent2); border-radius: var(--radius); }
   .error-msg.visible { display: block; }
 
-  /* ---- Footer ---- */
-  footer {
-    margin-top: 2.5rem;
-    font-size: 0.5rem;
-    color: var(--muted);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    text-align: center;
+  .viz-card { display: none; padding: 0.9rem 1.1rem; }
+  .viz-card.visible { display: block; }
+  .viz-inner { display: flex; align-items: center; gap: 0.9rem; }
+  .bars { display: flex; align-items: flex-end; gap: 2px; height: 32px; flex: 1; }
+  .bar { flex: 1; max-width: 5px; background: var(--accent); border-radius: 1px; height: 3px; transition: height 0.07s ease; }
+  .bar.alt { background: var(--accent3); }
+  .viz-status { font-size: 0.5rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted2); min-width: 5rem; text-align: right; }
+  .viz-status.active { color: var(--accent); }
+
+  .response-card { display: none; }
+  .response-card.visible { display: block; }
+  .response-inner { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; }
+  .response-text { font-size: 0.75rem; line-height: 1.75; color: var(--muted2); white-space: pre-wrap; flex: 1; }
+  .copy-btn {
+    background: transparent; border: 1px solid var(--border2); color: var(--muted2);
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.5rem; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.28rem 0.5rem; cursor: pointer; border-radius: var(--radius); transition: all 0.12s ease; flex-shrink: 0;
   }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.copied { border-color: var(--accent3); color: var(--accent3); }
 
-  /* ---- Voice Clone ---- */
-  .clone-toggle {
-    width: 100%;
-    background: transparent;
-    border: none;
-    color: var(--muted2);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.55rem;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0;
-    text-align: left;
-    margin-bottom: 0;
-    transition: color 0.12s ease;
+  .history-card { display: none; }
+  .history-card.visible { display: block; }
+  .history-list { display: flex; flex-direction: column; gap: 0.35rem; }
+  .history-item {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.45rem 0.65rem; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--bg); transition: border-color 0.12s ease;
   }
-
-  .clone-toggle:hover { color: var(--accent); }
-
-  .clone-toggle::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
+  .history-item:hover { border-color: var(--border2); }
+  .history-num { font-size: 0.48rem; color: var(--muted); min-width: 0.9rem; }
+  .history-prompt { font-size: 0.6rem; color: var(--muted2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .history-play {
+    background: transparent; border: 1px solid var(--border2); color: var(--muted2);
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.48rem; letter-spacing: 0.06em;
+    padding: 0.22rem 0.45rem; cursor: pointer; border-radius: var(--radius); transition: all 0.12s ease; flex-shrink: 0;
   }
+  .history-play:hover { border-color: var(--accent3); color: var(--accent3); }
+  .history-play.playing { border-color: var(--accent3); color: var(--accent3); background: rgba(0,212,255,0.07); }
 
-  .clone-toggle .arrow {
-    font-size: 0.5rem;
-    transition: transform 0.2s ease;
-    margin-left: 0.25rem;
+  .preset-row { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.5rem; }
+  .preset-chip {
+    background: transparent; border: 1px solid var(--border2); color: var(--muted2);
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.52rem; letter-spacing: 0.07em; text-transform: uppercase;
+    padding: 0.28rem 0.55rem; cursor: pointer; border-radius: 1px;
+    transition: all 0.12s ease; display: flex; align-items: center; gap: 0.3rem;
   }
-
-  .clone-toggle.open .arrow { transform: rotate(180deg); }
-  .clone-toggle.open { color: var(--accent); }
-
-  .clone-body {
-    display: none;
-    margin-top: 1rem;
+  .preset-chip:hover { border-color: var(--accent4); color: var(--accent4); }
+  .preset-del { color: var(--muted); font-size: 0.55rem; line-height: 1; }
+  .preset-del:hover { color: var(--accent2) !important; }
+  .preset-save-row { display: flex; gap: 0.4rem; margin-top: 0.45rem; }
+  .preset-save-btn {
+    background: var(--accent4); border: none; border-radius: var(--radius);
+    color: #000; font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 0.5rem 0.9rem; cursor: pointer; transition: all 0.12s ease; flex-shrink: 0;
   }
-
-  .clone-body.open { display: block; }
+  .preset-save-btn:hover { background: #fff; }
 
   .clone-active-bar {
-    display: none;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--accent3);
-    border-radius: var(--radius);
-    margin-bottom: 0.75rem;
-    background: rgba(0, 212, 255, 0.05);
+    display: none; align-items: center; gap: 0.55rem;
+    padding: 0.4rem 0.6rem; border: 1px solid var(--accent3); border-radius: var(--radius);
+    margin-bottom: 0.6rem; background: rgba(0,212,255,0.04);
   }
-
   .clone-active-bar.visible { display: flex; }
-
-  .clone-active-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent3);
-    flex-shrink: 0;
-    animation: pulse-dot 1.5s ease infinite;
+  .clone-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent3); flex-shrink: 0; animation: pdot 1.5s ease infinite; }
+  @keyframes pdot { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  .clone-name { font-size: 0.58rem; color: var(--accent3); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .clone-clear {
+    background: transparent; border: 1px solid var(--muted); color: var(--muted2);
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.5rem; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 0.2rem 0.42rem; cursor: pointer; border-radius: var(--radius); transition: all 0.12s ease; flex-shrink: 0;
   }
-
-  @keyframes pulse-dot {
-    0%,100% { opacity: 1; }
-    50%      { opacity: 0.3; }
-  }
-
-  .clone-active-name {
-    font-size: 0.6rem;
-    color: var(--accent3);
-    letter-spacing: 0.1em;
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .clone-clear-btn {
-    background: transparent;
-    border: 1px solid var(--muted);
-    color: var(--muted2);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.55rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 0.25rem 0.5rem;
-    cursor: pointer;
-    border-radius: var(--radius);
-    transition: all 0.12s ease;
-    flex-shrink: 0;
-  }
-
-  .clone-clear-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .clone-clear:hover { border-color: var(--accent2); color: var(--accent2); }
 
   .file-drop {
-    border: 1px dashed var(--border2);
-    border-radius: var(--radius);
-    padding: 1rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.12s ease;
-    margin-bottom: 0.75rem;
-    position: relative;
+    border: 1px dashed var(--border2); border-radius: var(--radius);
+    padding: 0.85rem; text-align: center; cursor: pointer;
+    transition: all 0.12s ease; margin-bottom: 0.6rem; position: relative;
   }
-
-  .file-drop:hover, .file-drop.dragover {
-    border-color: var(--accent3);
-    background: rgba(0, 212, 255, 0.03);
-  }
-
-  .file-drop input[type=file] {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-  }
-
-  .file-drop-text {
-    font-size: 0.6rem;
-    color: var(--muted2);
-    letter-spacing: 0.1em;
-    pointer-events: none;
-  }
-
+  .file-drop:hover, .file-drop.dragover { border-color: var(--accent3); background: rgba(0,212,255,0.03); }
+  .file-drop input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .file-drop-text { font-size: 0.56rem; color: var(--muted2); letter-spacing: 0.07em; pointer-events: none; }
   .file-drop-text span { color: var(--accent3); }
 
-  .ref-text-label {
-    font-size: 0.55rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--muted);
-    display: block;
-    margin-bottom: 0.4rem;
+  .load-voice-btn {
+    width: 100%; background: var(--accent3); border: none; border-radius: var(--radius);
+    color: #000; font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 0.52rem; cursor: pointer; margin-top: 0.55rem; transition: all 0.12s ease; font-weight: 500;
   }
+  .load-voice-btn:hover { background: #fff; }
+  .load-voice-btn:disabled { background: var(--muted); cursor: not-allowed; }
 
-  .ref-textarea {
-    min-height: 60px;
-  }
+  .shortcuts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem 1.5rem; }
+  .shortcut-row { display: flex; align-items: center; gap: 0.45rem; }
+  .shortcut-key { font-size: 0.48rem; color: var(--accent); background: rgba(232,255,0,0.07); border: 1px solid rgba(232,255,0,0.18); border-radius: 2px; padding: 0.12rem 0.32rem; white-space: nowrap; flex-shrink: 0; }
+  .shortcut-desc { font-size: 0.48rem; color: var(--muted2); letter-spacing: 0.04em; }
 
-  .load-btn {
-    width: 100%;
-    background: var(--accent3);
-    border: none;
-    border-radius: var(--radius);
-    color: #000;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    padding: 0.6rem;
-    cursor: pointer;
-    margin-top: 0.75rem;
-    transition: all 0.12s ease;
-    font-weight: 500;
-  }
+  .conv-toggle-row { display: flex; align-items: center; gap: 0.55rem; margin-top: 0.55rem; }
+  .toggle-switch { position: relative; width: 28px; height: 16px; flex-shrink: 0; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; inset: 0; background: var(--border2); border-radius: 16px; cursor: pointer; transition: 0.2s; }
+  .toggle-slider::before { content: ''; position: absolute; width: 10px; height: 10px; left: 3px; bottom: 3px; background: var(--muted2); border-radius: 50%; transition: 0.2s; }
+  .toggle-switch input:checked + .toggle-slider { background: var(--accent3); }
+  .toggle-switch input:checked + .toggle-slider::before { transform: translateX(12px); background: #000; }
+  .toggle-label { font-size: 0.5rem; color: var(--muted2); letter-spacing: 0.1em; text-transform: uppercase; }
 
-  .load-btn:hover { background: #fff; }
-  .load-btn:disabled { background: var(--muted); cursor: not-allowed; }
+  footer { margin-top: 2.5rem; font-size: 0.47rem; color: var(--muted); letter-spacing: 0.2em; text-transform: uppercase; text-align: center; }
 
   @media (max-width: 480px) {
     .slider-grid { grid-template-columns: 1fr; }
+    .shortcuts-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
-
 <div class="container">
 
   <header>
-    <div>
-      <div class="title">LLM<br><span>VOICE</span></div>
-    </div>
-    <div class="subtitle">
-      Ollama · Fish Speech<br>
-      Streaming · Uncensored
-    </div>
+    <div><div class="title">LLM<br><span>VOICE</span></div></div>
+    <div class="subtitle">Ollama · Fish Speech<br>Streaming · Uncensored</div>
   </header>
 
   <!-- Mode -->
   <div class="card">
     <div class="card-label">Mode</div>
-    <div class="mode-row">
-      <button class="mode-btn active" data-mode="conversational">Conversational</button>
-      <button class="mode-btn" data-mode="story">Storyteller</button>
+    <div class="btn-row">
+      <button class="seg-btn active" data-mode="conversational">Conversational</button>
+      <button class="seg-btn" data-mode="story">Storyteller</button>
+    </div>
+    <div class="conv-toggle-row">
+      <label class="toggle-switch"><input type="checkbox" id="historyToggle"><span class="toggle-slider"></span></label>
+      <span class="toggle-label">Remember conversation history</span>
+    </div>
+  </div>
+
+  <!-- Character -->
+  <div class="card">
+    <div class="card-label">Character</div>
+    <textarea class="input-sm" id="character" rows="2" placeholder="Define a persistent persona… e.g. You are Rex, a grizzled war journalist with a dark sense of humor who never sugarcoats anything."></textarea>
+  </div>
+
+  <!-- Presets -->
+  <div class="card">
+    <button class="collapsible-header" id="presetsToggle">Presets <span class="arrow">▼</span></button>
+    <div class="collapsible-body" id="presetsBody">
+      <div class="preset-row" id="presetRow"><span style="font-size:0.5rem;color:var(--muted)">No presets saved yet.</span></div>
+      <div class="preset-save-row">
+        <input type="text" class="input-sm" id="presetName" style="flex:1" placeholder="Preset name…">
+        <button class="preset-save-btn" id="presetSaveBtn">Save Current</button>
+      </div>
     </div>
   </div>
 
@@ -607,75 +320,63 @@
       <button class="chip" data-tone="hype">Hype</button>
       <button class="chip" data-tone="noir">Noir</button>
     </div>
-    <input
-      class="custom-tone"
-      id="customTone"
-      type="text"
-      placeholder="Or describe a custom voice… e.g. Victorian aristocrat who just stepped on a Lego"
-    >
+    <input type="text" class="input-sm" id="customTone" placeholder="Or describe a custom voice… e.g. Victorian aristocrat who just stepped on a Lego">
   </div>
 
   <!-- Controls -->
   <div class="card">
     <div class="card-label">Controls</div>
     <div class="slider-grid">
-
       <div class="slider-group">
-        <div class="slider-header">
-          <span class="slider-label">Speed</span>
-          <span class="slider-val" id="speedVal">1.0×</span>
-        </div>
+        <div class="slider-header"><span class="slider-label">Speed</span><span class="slider-val" id="speedVal">1.0×</span></div>
         <input type="range" id="speed" min="0.5" max="2.0" step="0.1" value="1.0">
         <div class="slider-ticks"><span>0.5×</span><span>1.0×</span><span>2.0×</span></div>
       </div>
-
       <div class="slider-group">
-        <div class="slider-header">
-          <span class="slider-label">Emotion Intensity</span>
-          <span class="slider-val" id="intensityVal">3</span>
-        </div>
+        <div class="slider-header"><span class="slider-label">Emotion Intensity</span><span class="slider-val" id="intensityVal">3</span></div>
         <input type="range" id="intensity" min="1" max="5" step="1" value="3">
         <div class="slider-ticks"><span>Subtle</span><span>Moderate</span><span>Extreme</span></div>
       </div>
-
     </div>
   </div>
 
   <!-- Length -->
   <div class="card">
     <div class="card-label">Response Length</div>
-    <div class="length-row">
-      <button class="length-btn" data-length="short">Short<br><span style="font-size:0.5rem;opacity:0.6">~50 words</span></button>
-      <button class="length-btn active" data-length="medium">Medium<br><span style="font-size:0.5rem;opacity:0.6">~150 words</span></button>
-      <button class="length-btn" data-length="long">Long<br><span style="font-size:0.5rem;opacity:0.6">~300 words</span></button>
+    <div class="btn-row">
+      <button class="seg-btn" data-length="short">Short<br><span style="font-size:0.44rem;opacity:0.6">~50 words</span></button>
+      <button class="seg-btn active2" data-length="medium">Medium<br><span style="font-size:0.44rem;opacity:0.6">~150 words</span></button>
+      <button class="seg-btn" data-length="long">Long<br><span style="font-size:0.44rem;opacity:0.6">~300 words</span></button>
     </div>
   </div>
 
   <!-- Voice Clone -->
   <div class="card">
-    <button class="clone-toggle" id="cloneToggle">Voice Clone <span class="arrow">▼</span></button>
-    <div class="clone-body" id="cloneBody">
+    <button class="collapsible-header" id="cloneToggle">Voice Clone <span class="arrow">▼</span></button>
+    <div class="collapsible-body" id="cloneBody">
       <div class="clone-active-bar" id="cloneActiveBar">
-        <div class="clone-active-dot"></div>
-        <span class="clone-active-name" id="cloneActiveName">No voice loaded</span>
-        <button class="clone-clear-btn" id="cloneClearBtn">Clear</button>
+        <div class="clone-dot"></div>
+        <span class="clone-name" id="cloneName">No voice loaded</span>
+        <button class="clone-clear" id="cloneClearBtn">Clear</button>
       </div>
       <div class="file-drop" id="fileDrop">
         <input type="file" id="refAudioFile" accept="audio/*">
-        <div class="file-drop-text">Drop audio file or <span>click to browse</span><br>mp3 · wav · ogg · m4a · flac</div>
+        <div class="file-drop-text">Drop audio or <span>click to browse</span><br>mp3 · wav · ogg · m4a · flac</div>
       </div>
-      <label class="ref-text-label">Reference Text (what the audio says)</label>
-      <textarea class="ref-textarea" id="refText" placeholder="Type exactly what is spoken in the reference audio…"></textarea>
-      <button class="load-btn" id="loadVoiceBtn">Load Voice</button>
+      <label class="input-label">Reference Text (what the audio says)</label>
+      <textarea class="input-sm" id="refText" rows="2" placeholder="Type exactly what is spoken in the reference audio…"></textarea>
+      <button class="load-voice-btn" id="loadVoiceBtn">Load Voice</button>
     </div>
   </div>
 
   <!-- Prompt -->
   <div class="card">
     <div class="card-label">Prompt</div>
-    <textarea id="prompt" placeholder="Ask something or give a storytelling prompt…&#10;&#10;Ctrl+Enter to speak"></textarea>
-    <div class="prompt-footer">
-      <span class="hint">Ctrl+Enter to speak</span>
+    <textarea id="prompt" rows="3" placeholder="Ask something or give a storytelling prompt…&#10;Ctrl+Enter to speak  ·  Ctrl+R to regenerate  ·  Esc to stop"></textarea>
+    <div class="speak-row">
+      <span class="hint">Ctrl+Enter · Ctrl+R regen · Esc stop</span>
+      <button class="icon-btn" id="regenBtn">↺ Regen</button>
+      <button class="icon-btn stop" id="stopBtn">■ Stop</button>
       <button class="speak-btn" id="speakBtn">SPEAK</button>
     </div>
     <div class="error-msg" id="errorMsg"></div>
@@ -691,331 +392,505 @@
 
   <!-- Response -->
   <div class="card response-card" id="responseCard">
-    <div class="card-label">LLM Output</div>
-    <div class="response-text" id="responseText"></div>
+    <div class="card-label">Response</div>
+    <div class="response-inner">
+      <div class="response-text" id="responseText"></div>
+      <button class="copy-btn" id="copyBtn">Copy</button>
+    </div>
+  </div>
+
+  <!-- Audio History -->
+  <div class="card history-card" id="historyCard">
+    <div class="card-label">Audio History</div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+
+  <!-- Keyboard Shortcuts -->
+  <div class="card">
+    <button class="collapsible-header" id="shortcutsToggle">Keyboard Shortcuts <span class="arrow">▼</span></button>
+    <div class="collapsible-body" id="shortcutsBody">
+      <div class="shortcuts-grid">
+        <div class="shortcut-row"><span class="shortcut-key">Ctrl+Enter</span><span class="shortcut-desc">Speak</span></div>
+        <div class="shortcut-row"><span class="shortcut-key">Ctrl+R</span><span class="shortcut-desc">Regenerate last</span></div>
+        <div class="shortcut-row"><span class="shortcut-key">Esc</span><span class="shortcut-desc">Stop playback</span></div>
+        <div class="shortcut-row"><span class="shortcut-key">Ctrl+L</span><span class="shortcut-desc">Clear prompt</span></div>
+        <div class="shortcut-row"><span class="shortcut-key">Ctrl+H</span><span class="shortcut-desc">Clear audio history</span></div>
+        <div class="shortcut-row"><span class="shortcut-key">Ctrl+K</span><span class="shortcut-desc">Clear conversation</span></div>
+        <div class="shortcut-row"><span class="shortcut-key">1 / 2 / 3</span><span class="shortcut-desc">Length short/med/long</span></div>
+        <div class="shortcut-row"><span class="shortcut-key">Ctrl+C</span><span class="shortcut-desc">Copy response text</span></div>
+      </div>
+    </div>
   </div>
 
   <footer>schnicklfritz / llm-voice &nbsp;·&nbsp; quickpod</footer>
-
 </div>
 
 <audio id="audio"></audio>
 
 <script>
-  // ---- State ----
-  let currentMode      = 'conversational';
-  let currentTone      = 'casual';
-  let currentLength    = 'medium';
-  let mediaSource      = null;
-  let sourceBuffer     = null;
-  let audioQueue       = [];
-  let isAppending      = false;
-  let streamDone       = false;
-  let animFrame        = null;
+// ============================================================
+// STATE
+// ============================================================
+let currentMode   = 'conversational';
+let currentTone   = 'casual';
+let currentLength = 'medium';
+let useHistory    = false;
+let conversationHistory = [];
+let lastPrompt    = null;
+let lastRespText  = '';
 
-  // Voice clone state — persists for session
-  let voiceCloneB64    = null;
-  let voiceCloneText   = null;
-  let voiceCloneName   = null;
+let voiceB64  = null;
+let voiceText = null;
+let voiceName = null;
 
-  // ---- Voice Clone ----
-  const cloneToggle  = document.getElementById('cloneToggle');
-  const cloneBody    = document.getElementById('cloneBody');
-  const cloneActiveBar  = document.getElementById('cloneActiveBar');
-  const cloneActiveName = document.getElementById('cloneActiveName');
-  const fileDrop     = document.getElementById('fileDrop');
-  const refAudioFile = document.getElementById('refAudioFile');
-  const loadVoiceBtn = document.getElementById('loadVoiceBtn');
+let mediaSource  = null;
+let sourceBuffer = null;
+let audioQueue   = [];
+let isAppending  = false;
+let streamDone   = false;
+let animFrame    = null;
+let abortCtrl    = null;
 
-  cloneToggle.addEventListener('click', () => {
-    cloneToggle.classList.toggle('open');
-    cloneBody.classList.toggle('open');
+let audioHistory = [];
+let histAudio    = new Audio();
+let playingIdx   = null;
+
+let presets = JSON.parse(localStorage.getItem('llmvoice_presets') || '{}');
+
+// ============================================================
+// VISUALIZER BARS
+// ============================================================
+const barsEl = document.getElementById('bars');
+for (let i = 0; i < 32; i++) {
+  const b = document.createElement('div');
+  b.className = 'bar' + (i % 3 === 0 ? ' alt' : '');
+  barsEl.appendChild(b);
+}
+
+// ============================================================
+// MODE
+// ============================================================
+document.querySelectorAll('[data-mode]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-mode]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
   });
+});
 
-  // Drag and drop
-  fileDrop.addEventListener('dragover', e => { e.preventDefault(); fileDrop.classList.add('dragover'); });
-  fileDrop.addEventListener('dragleave', () => fileDrop.classList.remove('dragover'));
-  fileDrop.addEventListener('drop', e => {
-    e.preventDefault();
-    fileDrop.classList.remove('dragover');
-    if (e.dataTransfer.files[0]) {
-      refAudioFile.files = e.dataTransfer.files;
-      updateFileDropLabel(e.dataTransfer.files[0].name);
-    }
+document.getElementById('historyToggle').addEventListener('change', e => {
+  useHistory = e.target.checked;
+  if (!useHistory) conversationHistory = [];
+});
+
+// ============================================================
+// TONE
+// ============================================================
+document.querySelectorAll('.chip[data-tone]').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.chip[data-tone]').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentTone = chip.dataset.tone;
+    document.getElementById('customTone').value = '';
   });
+});
+document.getElementById('customTone').addEventListener('input', () => {
+  if (document.getElementById('customTone').value.trim())
+    document.querySelectorAll('.chip[data-tone]').forEach(c => c.classList.remove('active'));
+});
 
-  refAudioFile.addEventListener('change', () => {
-    if (refAudioFile.files[0]) updateFileDropLabel(refAudioFile.files[0].name);
+// ============================================================
+// LENGTH
+// ============================================================
+document.querySelectorAll('[data-length]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-length]').forEach(b => b.classList.remove('active','active2'));
+    btn.classList.add('active2');
+    currentLength = btn.dataset.length;
   });
+});
 
-  function updateFileDropLabel(name) {
-    fileDrop.querySelector('.file-drop-text').innerHTML =
-      `<span>${name}</span>`;
-  }
+// ============================================================
+// SLIDERS
+// ============================================================
+const speedSlider = document.getElementById('speed');
+speedSlider.addEventListener('input', () => {
+  document.getElementById('speedVal').textContent = parseFloat(speedSlider.value).toFixed(1) + '×';
+});
+const intSlider = document.getElementById('intensity');
+intSlider.addEventListener('input', () => {
+  document.getElementById('intensityVal').textContent = intSlider.value;
+});
 
-  loadVoiceBtn.addEventListener('click', async () => {
-    const file    = refAudioFile.files[0];
-    const refText = document.getElementById('refText').value.trim();
-    if (!file) { alert('Please select an audio file.'); return; }
-    if (!refText) { alert('Please enter the reference text.'); return; }
-
-    loadVoiceBtn.disabled = true;
-    loadVoiceBtn.textContent = 'Loading...';
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const b64 = reader.result.split(',')[1];
-      voiceCloneB64  = b64;
-      voiceCloneText = refText;
-      voiceCloneName = file.name;
-
-      // Show active indicator
-      cloneActiveBar.classList.add('visible');
-      cloneActiveName.textContent = `Voice: ${file.name}`;
-
-      loadVoiceBtn.disabled = false;
-      loadVoiceBtn.textContent = 'Voice Loaded ✓';
-      setTimeout(() => { loadVoiceBtn.textContent = 'Load Voice'; }, 2000);
-    };
-    reader.readAsDataURL(file);
+// ============================================================
+// COLLAPSIBLES
+// ============================================================
+['presetsToggle','cloneToggle','shortcutsToggle'].forEach(id => {
+  document.getElementById(id).addEventListener('click', () => {
+    document.getElementById(id).classList.toggle('open');
+    document.getElementById(id.replace('Toggle','Body')).classList.toggle('open');
   });
+});
 
-  document.getElementById('cloneClearBtn').addEventListener('click', () => {
-    voiceCloneB64  = null;
-    voiceCloneText = null;
-    voiceCloneName = null;
-    cloneActiveBar.classList.remove('visible');
-    cloneActiveName.textContent = 'No voice loaded';
-    refAudioFile.value = '';
-    document.getElementById('refText').value = '';
-    fileDrop.querySelector('.file-drop-text').innerHTML =
-      'Drop audio file or <span>click to browse</span><br>mp3 · wav · ogg · m4a · flac';
-    loadVoiceBtn.textContent = 'Load Voice';
-  });
+// ============================================================
+// PRESETS
+// ============================================================
+function getSnapshot() {
+  return {
+    mode:       currentMode,
+    tone:       currentTone,
+    customTone: document.getElementById('customTone').value.trim(),
+    length:     currentLength,
+    speed:      speedSlider.value,
+    intensity:  intSlider.value,
+    character:  document.getElementById('character').value.trim(),
+  };
+}
 
-  // ---- Mode ----
-  document.querySelectorAll('.mode-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentMode = btn.dataset.mode;
+function applySnapshot(s) {
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === s.mode));
+  currentMode = s.mode;
+  document.querySelectorAll('.chip[data-tone]').forEach(c => c.classList.toggle('active', c.dataset.tone === s.tone));
+  currentTone = s.tone;
+  document.getElementById('customTone').value = s.customTone || '';
+  document.querySelectorAll('[data-length]').forEach(b => { b.classList.remove('active','active2'); if (b.dataset.length === s.length) b.classList.add('active2'); });
+  currentLength = s.length;
+  speedSlider.value = s.speed;
+  document.getElementById('speedVal').textContent = parseFloat(s.speed).toFixed(1) + '×';
+  intSlider.value = s.intensity;
+  document.getElementById('intensityVal').textContent = s.intensity;
+  document.getElementById('character').value = s.character || '';
+}
+
+function renderPresets() {
+  const row  = document.getElementById('presetRow');
+  const keys = Object.keys(presets);
+  if (!keys.length) { row.innerHTML = '<span style="font-size:0.5rem;color:var(--muted)">No presets saved yet.</span>'; return; }
+  row.innerHTML = '';
+  keys.forEach(name => {
+    const chip = document.createElement('div');
+    chip.className = 'preset-chip';
+    chip.innerHTML = `<span>${escapeHtml(name)}</span><span class="preset-del" data-name="${escapeHtml(name)}">✕</span>`;
+    chip.addEventListener('click', e => {
+      if (e.target.classList.contains('preset-del')) {
+        delete presets[e.target.dataset.name];
+        localStorage.setItem('llmvoice_presets', JSON.stringify(presets));
+        renderPresets();
+      } else { applySnapshot(presets[name]); }
     });
+    row.appendChild(chip);
   });
+}
 
-  // ---- Tone chips ----
-  document.querySelectorAll('.chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      currentTone = chip.dataset.tone;
-      document.getElementById('customTone').value = '';
+document.getElementById('presetSaveBtn').addEventListener('click', () => {
+  const name = document.getElementById('presetName').value.trim();
+  if (!name) return;
+  presets[name] = getSnapshot();
+  localStorage.setItem('llmvoice_presets', JSON.stringify(presets));
+  document.getElementById('presetName').value = '';
+  renderPresets();
+});
+
+renderPresets();
+
+// ============================================================
+// VOICE CLONE
+// ============================================================
+const fileDrop = document.getElementById('fileDrop');
+const refAudio = document.getElementById('refAudioFile');
+
+fileDrop.addEventListener('dragover', e => { e.preventDefault(); fileDrop.classList.add('dragover'); });
+fileDrop.addEventListener('dragleave', () => fileDrop.classList.remove('dragover'));
+fileDrop.addEventListener('drop', e => {
+  e.preventDefault(); fileDrop.classList.remove('dragover');
+  if (e.dataTransfer.files[0]) { refAudio.files = e.dataTransfer.files; updateDropLabel(e.dataTransfer.files[0].name); }
+});
+refAudio.addEventListener('change', () => { if (refAudio.files[0]) updateDropLabel(refAudio.files[0].name); });
+
+function updateDropLabel(name) {
+  fileDrop.querySelector('.file-drop-text').innerHTML = `<span>${escapeHtml(name)}</span>`;
+}
+
+document.getElementById('loadVoiceBtn').addEventListener('click', () => {
+  const file = refAudio.files[0];
+  const ref  = document.getElementById('refText').value.trim();
+  if (!file) return alert('Select an audio file first.');
+  if (!ref)  return alert('Enter the reference text.');
+  const btn = document.getElementById('loadVoiceBtn');
+  btn.disabled = true; btn.textContent = 'Loading…';
+  const reader = new FileReader();
+  reader.onload = () => {
+    voiceB64  = reader.result.split(',')[1];
+    voiceText = ref;
+    voiceName = file.name;
+    document.getElementById('cloneActiveBar').classList.add('visible');
+    document.getElementById('cloneName').textContent = `Voice: ${file.name}`;
+    btn.disabled = false; btn.textContent = 'Voice Loaded ✓';
+    setTimeout(() => { btn.textContent = 'Load Voice'; }, 2000);
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('cloneClearBtn').addEventListener('click', () => {
+  voiceB64 = voiceText = voiceName = null;
+  document.getElementById('cloneActiveBar').classList.remove('visible');
+  refAudio.value = '';
+  document.getElementById('refText').value = '';
+  fileDrop.querySelector('.file-drop-text').innerHTML = 'Drop audio or <span>click to browse</span><br>mp3 · wav · ogg · m4a · flac';
+  document.getElementById('loadVoiceBtn').textContent = 'Load Voice';
+});
+
+// ============================================================
+// SPEAK
+// ============================================================
+document.getElementById('speakBtn').addEventListener('click', () => speak());
+document.getElementById('regenBtn').addEventListener('click', () => { if (lastPrompt) speak(lastPrompt); });
+document.getElementById('stopBtn').addEventListener('click', stopPlayback);
+
+function stopPlayback() {
+  if (abortCtrl) abortCtrl.abort();
+  document.getElementById('audio').pause();
+  animateBars(false);
+  setStatus('Stopped', false);
+  resetBtn();
+}
+
+async function speak(overridePrompt) {
+  const promptEl = document.getElementById('prompt');
+  const prompt   = overridePrompt || promptEl.value.trim();
+  if (!prompt) return;
+  lastPrompt = prompt;
+
+  const btn      = document.getElementById('speakBtn');
+  const stopBtn  = document.getElementById('stopBtn');
+  const regenBtn = document.getElementById('regenBtn');
+  const errorMsg = document.getElementById('errorMsg');
+  const vizCard  = document.getElementById('vizCard');
+  const respCard = document.getElementById('responseCard');
+  const respText = document.getElementById('responseText');
+  const audio    = document.getElementById('audio');
+
+  errorMsg.classList.remove('visible');
+  respText.textContent = '';
+  audio.pause();
+  if (mediaSource && mediaSource.readyState === 'open') { try { mediaSource.endOfStream(); } catch(e) {} }
+  audioQueue = []; isAppending = false; streamDone = false;
+
+  btn.disabled = true; btn.classList.add('loading'); btn.textContent = 'THINKING…';
+  stopBtn.classList.add('visible');
+  regenBtn.classList.remove('visible');
+  vizCard.classList.add('visible');
+  setStatus('Connecting', true);
+  animateBars(false);
+
+  abortCtrl = new AbortController();
+
+  const customTone = document.getElementById('customTone').value.trim();
+  const character  = document.getElementById('character').value.trim();
+
+  // Build history messages
+  let histMsgs = null;
+  if (useHistory && conversationHistory.length > 0) {
+    histMsgs = [...conversationHistory, { role: 'user', content: prompt }];
+  }
+
+  const payload = {
+    prompt,
+    mode:              currentMode,
+    tone:              currentTone,
+    custom_tone:       customTone || null,
+    emotion_intensity: parseInt(intSlider.value),
+    length:            currentLength,
+    character:         character || null,
+    format:            'mp3',
+    speed:             parseFloat(speedSlider.value),
+    stream:            true,
+    voice_reference_audio_b64: voiceB64 || null,
+    voice_reference_text:      voiceText || null,
+    messages:          histMsgs,
+  };
+
+  try {
+    const resp = await fetch('/speak', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: abortCtrl.signal,
     });
-  });
 
-  document.getElementById('customTone').addEventListener('input', () => {
-    if (document.getElementById('customTone').value.trim()) {
-      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    }
-  });
+    if (!resp.ok) { const t = await resp.text(); throw new Error(t || resp.statusText); }
 
-  // ---- Length ----
-  document.querySelectorAll('.length-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.length-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentLength = btn.dataset.length;
-    });
-  });
+    mediaSource = new MediaSource();
+    audio.src = URL.createObjectURL(mediaSource);
 
-  // ---- Sliders ----
-  const speedSlider = document.getElementById('speed');
-  const speedVal    = document.getElementById('speedVal');
-  speedSlider.addEventListener('input', () => {
-    speedVal.textContent = parseFloat(speedSlider.value).toFixed(1) + '×';
-  });
+    mediaSource.addEventListener('sourceopen', async () => {
+      try { sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg'); }
+      catch(e) { throw new Error('MP3 streaming not supported: ' + e.message); }
+      sourceBuffer.addEventListener('updateend', processQueue);
 
-  const intensitySlider = document.getElementById('intensity');
-  const intensityVal    = document.getElementById('intensityVal');
-  intensitySlider.addEventListener('input', () => {
-    intensityVal.textContent = intensitySlider.value;
-  });
+      btn.textContent = 'STREAMING…';
+      setStatus('Buffering', true);
+      respCard.classList.add('visible');
+      respText.innerHTML = '<em style="color:var(--muted)">Generating…</em>';
 
-  // ---- Visualizer bars ----
-  const barsEl = document.getElementById('bars');
-  for (let i = 0; i < 32; i++) {
-    const bar = document.createElement('div');
-    bar.className = 'bar' + (i % 3 === 0 ? ' alt' : '');
-    barsEl.appendChild(bar);
-  }
+      const reader = resp.body.getReader();
+      const chunks = [];
+      let first = true;
 
-  function animateBars(on) {
-    const bars = barsEl.querySelectorAll('.bar');
-    if (!on) {
-      if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
-      bars.forEach(b => b.style.height = '3px');
-      return;
-    }
-    function tick() {
-      bars.forEach(b => { b.style.height = (Math.random() * 30 + 4) + 'px'; });
-      animFrame = requestAnimationFrame(tick);
-    }
-    tick();
-  }
-
-  function setStatus(text, active) {
-    const el = document.getElementById('vizStatus');
-    el.textContent = text;
-    el.classList.toggle('active', active);
-  }
-
-  // ---- Speak ----
-  document.getElementById('speakBtn').addEventListener('click', speak);
-  document.getElementById('prompt').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) speak();
-  });
-
-  async function speak() {
-    const promptEl  = document.getElementById('prompt');
-    const prompt    = promptEl.value.trim();
-    if (!prompt) return;
-
-    const btn        = document.getElementById('speakBtn');
-    const errorMsg   = document.getElementById('errorMsg');
-    const vizCard    = document.getElementById('vizCard');
-    const respCard   = document.getElementById('responseCard');
-    const respText   = document.getElementById('responseText');
-    const audio      = document.getElementById('audio');
-    const customTone = document.getElementById('customTone').value.trim();
-
-    // Reset
-    errorMsg.classList.remove('visible');
-    respText.textContent = '';
-    audio.pause();
-    if (mediaSource && mediaSource.readyState === 'open') {
-      try { mediaSource.endOfStream(); } catch(e) {}
-    }
-    audioQueue = []; isAppending = false; streamDone = false;
-
-    btn.disabled = true;
-    btn.classList.add('loading');
-    btn.textContent = 'THINKING...';
-    vizCard.classList.add('visible');
-    setStatus('Connecting', true);
-    animateBars(false);
-
-    const payload = {
-      prompt,
-      mode:              currentMode,
-      tone:              currentTone,
-      custom_tone:       customTone || null,
-      emotion_intensity: parseInt(intensitySlider.value),
-      length:            currentLength,
-      format:            'mp3',
-      speed:             parseFloat(speedSlider.value),
-      stream:            true,
-      voice_reference_audio_b64: voiceCloneB64 || null,
-      voice_reference_text:      voiceCloneText || null
-    };
-
-    try {
-      const resp = await fetch('/speak', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(payload)
-      });
-
-      if (!resp.ok) {
-        const text = await resp.text();
-        throw new Error(text || resp.statusText);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) { streamDone = true; processQueue(); break; }
+        chunks.push(value);
+        audioQueue.push(value);
+        if (first) { first = false; processQueue(); }
       }
 
-      // MediaSource streaming
-      mediaSource = new MediaSource();
-      audio.src = URL.createObjectURL(mediaSource);
+      // Save to audio history
+      const blob = new Blob(chunks, { type: 'audio/mpeg' });
+      const url  = URL.createObjectURL(blob);
+      addToHistory(prompt, url);
+    });
 
-      mediaSource.addEventListener('sourceopen', async () => {
-        try {
-          sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
-        } catch(e) {
-          throw new Error('Browser does not support MP3 streaming: ' + e.message);
-        }
-        sourceBuffer.addEventListener('updateend', processQueue);
+    audio.addEventListener('playing', () => {
+      setStatus('Playing', true);
+      animateBars(true);
+      btn.classList.remove('loading'); btn.classList.add('playing');
+      btn.textContent = 'PLAYING';
+      respText.innerHTML = '<em style="color:var(--muted2)">Audio streaming…</em>';
+    });
 
-        btn.textContent = 'STREAMING...';
-        setStatus('Buffering', true);
-
-        const reader = resp.body.getReader();
-        let firstChunk = true;
-        let fullText = '';
-
-        // We can't get text from the audio stream — show prompt as placeholder
-        respCard.classList.add('visible');
-        respText.innerHTML = '<em style="color:var(--muted)">Generating…</em>';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) {
-            streamDone = true;
-            processQueue();
-            break;
-          }
-          audioQueue.push(value);
-          if (firstChunk) {
-            firstChunk = false;
-            processQueue();
-          }
-        }
-      });
-
-      audio.addEventListener('playing', () => {
-        setStatus('Playing', true);
-        animateBars(true);
-        btn.classList.remove('loading');
-        btn.classList.add('playing');
-        btn.textContent = 'PLAYING';
-        respText.innerHTML = '<em style="color:var(--muted2)">Audio streaming…</em>';
-      });
-
-      audio.addEventListener('ended', () => {
-        setStatus('Done', false);
-        animateBars(false);
-        respText.innerHTML = '<em style="color:var(--muted)">Complete.</em>';
-        resetBtn();
-      });
-
-      audio.play().catch(() => {});
-
-    } catch(err) {
-      errorMsg.textContent = '⚠ ' + err.message;
-      errorMsg.classList.add('visible');
-      vizCard.classList.remove('visible');
+    audio.addEventListener('ended', () => {
+      setStatus('Done', false);
       animateBars(false);
-      resetBtn();
-    }
-  }
-
-  function processQueue() {
-    if (isAppending || !sourceBuffer || sourceBuffer.updating) return;
-    if (audioQueue.length === 0) {
-      if (streamDone && mediaSource && mediaSource.readyState === 'open') {
-        try { mediaSource.endOfStream(); } catch(e) {}
+      regenBtn.classList.add('visible');
+      if (useHistory) {
+        conversationHistory.push({ role: 'user', content: prompt });
+        if (conversationHistory.length > 20) conversationHistory = conversationHistory.slice(-20);
       }
-      return;
-    }
-    const chunk = audioQueue.shift();
-    try {
-      sourceBuffer.appendBuffer(chunk);
-    } catch(e) {
-      console.warn('appendBuffer:', e);
-    }
-  }
+      resetBtn();
+    });
 
-  function resetBtn() {
-    const btn = document.getElementById('speakBtn');
-    btn.disabled = false;
-    btn.classList.remove('loading', 'playing');
-    btn.textContent = 'SPEAK';
+    audio.play().catch(() => {});
+
+  } catch(err) {
+    if (err.name === 'AbortError') return;
+    errorMsg.textContent = '⚠ ' + err.message;
+    errorMsg.classList.add('visible');
+    vizCard.classList.remove('visible');
+    animateBars(false);
+    resetBtn();
   }
+}
+
+function processQueue() {
+  if (isAppending || !sourceBuffer || sourceBuffer.updating) return;
+  if (!audioQueue.length) {
+    if (streamDone && mediaSource && mediaSource.readyState === 'open') { try { mediaSource.endOfStream(); } catch(e) {} }
+    return;
+  }
+  const chunk = audioQueue.shift();
+  try { sourceBuffer.appendBuffer(chunk); } catch(e) { console.warn('appendBuffer:', e); }
+}
+
+function resetBtn() {
+  const btn = document.getElementById('speakBtn');
+  btn.disabled = false; btn.classList.remove('loading','playing'); btn.textContent = 'SPEAK';
+  document.getElementById('stopBtn').classList.remove('visible');
+}
+
+function animateBars(on) {
+  const bars = barsEl.querySelectorAll('.bar');
+  if (!on) { if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; } bars.forEach(b => b.style.height = '3px'); return; }
+  function tick() { bars.forEach(b => b.style.height = (Math.random()*28+4)+'px'); animFrame = requestAnimationFrame(tick); }
+  tick();
+}
+
+function setStatus(text, active) {
+  const el = document.getElementById('vizStatus');
+  el.textContent = text; el.classList.toggle('active', active);
+}
+
+// ============================================================
+// COPY
+// ============================================================
+document.getElementById('copyBtn').addEventListener('click', () => {
+  const t = document.getElementById('responseText').textContent;
+  if (!t || t.includes('Generating') || t.includes('streaming')) return;
+  navigator.clipboard.writeText(t).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+});
+
+// ============================================================
+// AUDIO HISTORY
+// ============================================================
+function addToHistory(prompt, url) {
+  audioHistory.unshift({ prompt, url });
+  if (audioHistory.length > 5) URL.revokeObjectURL(audioHistory.pop().url);
+  renderHistory();
+}
+
+function renderHistory() {
+  const card = document.getElementById('historyCard');
+  const list = document.getElementById('historyList');
+  if (!audioHistory.length) { card.classList.remove('visible'); return; }
+  card.classList.add('visible');
+  list.innerHTML = '';
+  audioHistory.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    const playBtn = document.createElement('button');
+    playBtn.className = 'history-play';
+    playBtn.textContent = '▶ Play';
+    div.innerHTML = `<span class="history-num">${i+1}</span><span class="history-prompt">${escapeHtml(item.prompt)}</span>`;
+    div.appendChild(playBtn);
+    playBtn.addEventListener('click', () => {
+      if (playingIdx === i && !histAudio.paused) {
+        histAudio.pause(); histAudio.currentTime = 0;
+        playBtn.textContent = '▶ Play'; playBtn.classList.remove('playing'); playingIdx = null;
+      } else {
+        document.querySelectorAll('.history-play').forEach(b => { b.textContent = '▶ Play'; b.classList.remove('playing'); });
+        histAudio.src = item.url; histAudio.play();
+        playBtn.textContent = '■ Stop'; playBtn.classList.add('playing'); playingIdx = i;
+        histAudio.onended = () => { playBtn.textContent = '▶ Play'; playBtn.classList.remove('playing'); playingIdx = null; };
+      }
+    });
+    list.appendChild(div);
+  });
+}
+
+// ============================================================
+// KEYBOARD SHORTCUTS
+// ============================================================
+document.addEventListener('keydown', e => {
+  const inInput = document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT';
+
+  if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); speak(); return; }
+  if (e.ctrlKey && e.key === 'r')     { e.preventDefault(); if (lastPrompt) speak(lastPrompt); return; }
+  if (e.key === 'Escape')             { stopPlayback(); return; }
+  if (e.ctrlKey && e.key === 'l')     { e.preventDefault(); document.getElementById('prompt').value = ''; return; }
+  if (e.ctrlKey && e.key === 'h')     {
+    e.preventDefault();
+    audioHistory.forEach(i => URL.revokeObjectURL(i.url));
+    audioHistory = []; renderHistory(); return;
+  }
+  if (e.ctrlKey && e.key === 'k')     { e.preventDefault(); conversationHistory = []; return; }
+  if (e.ctrlKey && e.key === 'c' && !inInput) { document.getElementById('copyBtn').click(); return; }
+  if (!e.ctrlKey && !e.altKey && !inInput) {
+    if (e.key === '1') document.querySelector('[data-length="short"]').click();
+    if (e.key === '2') document.querySelector('[data-length="medium"]').click();
+    if (e.key === '3') document.querySelector('[data-length="long"]').click();
+  }
+});
+
+// ============================================================
+// UTILS
+// ============================================================
+function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 </script>
 </body>
 </html>
