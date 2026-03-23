@@ -101,13 +101,14 @@ async def health():
 async def speak(req: SpeakRequest):
     system = build_system_prompt(req)
 
-    async with httpx.AsyncClient(timeout=120) as client:
+    async with httpx.AsyncClient(timeout=300) as client:
         # 1. LLM
         llm_resp = await client.post(
             f"{OLLAMA_URL}/api/chat",
             json={
                 "model": LLM_MODEL,
                 "stream": False,
+                "think": False,
                 "messages": [
                     {"role": "system", "content": system},
                     {"role": "user",   "content": req.prompt}
@@ -135,7 +136,7 @@ async def speak(req: SpeakRequest):
 
     if req.stream:
         async def stream_audio():
-            async with httpx.AsyncClient(timeout=120) as stream_client:
+            async with httpx.AsyncClient(timeout=300) as stream_client:
                 async with stream_client.stream(
                     "POST", f"{FISH_URL}/v1/tts", json=tts_payload
                 ) as r:
@@ -144,7 +145,7 @@ async def speak(req: SpeakRequest):
 
         return StreamingResponse(stream_audio(), media_type=media_type)
     else:
-        async with httpx.AsyncClient(timeout=120) as tts_client:
+        async with httpx.AsyncClient(timeout=300) as tts_client:
             tts_resp = await tts_client.post(f"{FISH_URL}/v1/tts", json=tts_payload)
             tts_resp.raise_for_status()
             return Response(content=tts_resp.content, media_type=media_type)
