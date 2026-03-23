@@ -832,7 +832,7 @@ async function speak(overridePrompt) {
     character:         character || null,
     format:            'mp3',
     speed:             parseFloat(speedSlider.value),
-    stream:            true,
+    stream:            false,
     voice_reference_audio_b64: voiceB64 || null,
     voice_reference_text:      voiceText || null,
     messages:          histMsgs,

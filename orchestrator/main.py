@@ -210,7 +210,12 @@ async def speak(req: SpeakRequest):
 
     media_type = MEDIA_TYPES.get(req.format, "audio/mpeg")
 
+# Force WAV for streaming — Fish only supports WAV stream
     if req.stream:
+        tts_payload["format"] = "wav"
+        tts_payload.pop("mp3_bitrate", None)
+        media_type = "audio/wav"
+
         async def stream_audio():
             async with httpx.AsyncClient(timeout=300) as stream_client:
                 async with stream_client.stream(
@@ -221,6 +226,8 @@ async def speak(req: SpeakRequest):
 
         return StreamingResponse(stream_audio(), media_type=media_type)
     else:
+        tts_payload["format"] = req.format
+        media_type = MEDIA_TYPES.get(req.format, "audio/mpeg")
         async with httpx.AsyncClient(timeout=300) as tts_client:
             tts_resp = await tts_client.post(f"{FISH_URL}/v1/tts", json=tts_payload)
             tts_resp.raise_for_status()
