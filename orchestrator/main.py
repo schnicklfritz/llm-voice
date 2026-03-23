@@ -167,19 +167,6 @@ async def speak(req: SpeakRequest):
     cfg    = get_config()
     system = build_system_prompt(req, cfg)
 
-     async def generate():
-        async with httpx.AsyncClient(timeout=300) as tts_client:
-            tts_resp = await tts_client.post(f"{FISH_URL}/v1/tts", json=tts_payload)
-            tts_resp.raise_for_status()
-            yield tts_resp.content
-
-    return StreamingResponse(
-        generate(),
-        media_type="audio/mpeg",
-        headers={"X-Accel-Buffering": "no"}
-    )
-
-
     # Determine think mode — request overrides config
     use_think = req.think if req.think is not None else cfg.get("think", False)
 
@@ -242,7 +229,6 @@ async def speak(req: SpeakRequest):
 
     async with httpx.AsyncClient(timeout=300) as tts_client:
         if use_msgpack:
-            # Serialize with msgpack for binary audio support
             packed = ormsgpack.packb(tts_payload, option=ormsgpack.OPT_SERIALIZE_NUMPY)
             tts_resp = await tts_client.post(
                 f"{FISH_URL}/v1/tts",
@@ -253,4 +239,17 @@ async def speak(req: SpeakRequest):
             tts_resp = await tts_client.post(f"{FISH_URL}/v1/tts", json=tts_payload)
 
         tts_resp.raise_for_status()
-        return Response(content=tts_resp.content, media_type=media_type)
+        audio_bytes = tts_resp.content
+
+    # Use StreamingResponse with chunked transfer so Firefox
+    # doesn't drop the connection while waiting for the LLM + TTS
+    async def audio_generator():
+        chunk_size = 8192
+        for i in range(0, len(audio_bytes), chunk_size):
+            yield audio_bytes[i:i + chunk_size]
+
+    return StreamingResponse(
+        audio_generator(),
+        media_type=media_type,
+        headers={"X-Accel-Buffering": "no"}
+    )
