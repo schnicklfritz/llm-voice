@@ -167,6 +167,19 @@ async def speak(req: SpeakRequest):
     cfg    = get_config()
     system = build_system_prompt(req, cfg)
 
+     async def generate():
+        async with httpx.AsyncClient(timeout=300) as tts_client:
+            tts_resp = await tts_client.post(f"{FISH_URL}/v1/tts", json=tts_payload)
+            tts_resp.raise_for_status()
+            yield tts_resp.content
+
+    return StreamingResponse(
+        generate(),
+        media_type="audio/mpeg",
+        headers={"X-Accel-Buffering": "no"}
+    )
+
+
     # Determine think mode — request overrides config
     use_think = req.think if req.think is not None else cfg.get("think", False)
 
