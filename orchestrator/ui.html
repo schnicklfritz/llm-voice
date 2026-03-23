@@ -211,6 +211,44 @@
   }
   .preset-save-btn:hover { background: #fff; }
 
+  /* Voice Library */
+  .voice-active-bar {
+    display: none; align-items: center; gap: 0.55rem;
+    padding: 0.4rem 0.6rem; border: 1px solid var(--accent3); border-radius: var(--radius);
+    margin-bottom: 0.7rem; background: rgba(0,212,255,0.04);
+  }
+  .voice-active-bar.visible { display: flex; }
+  .voice-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent3); flex-shrink: 0; animation: pdot 1.5s ease infinite; }
+  .voice-active-name { font-size: 0.58rem; color: var(--accent3); flex: 1; }
+  .voice-deactivate {
+    background: transparent; border: 1px solid var(--muted); color: var(--muted2);
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.5rem; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 0.2rem 0.42rem; cursor: pointer; border-radius: var(--radius); transition: all 0.12s ease; flex-shrink: 0;
+  }
+  .voice-deactivate:hover { border-color: var(--accent2); color: var(--accent2); }
+  .voice-library { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.7rem; min-height: 1.5rem; }
+  .voice-chip {
+    background: transparent; border: 1px solid var(--border2); color: var(--muted2);
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.55rem; letter-spacing: 0.07em;
+    padding: 0.28rem 0.55rem; cursor: pointer; border-radius: 1px;
+    transition: all 0.12s ease; display: flex; align-items: center; gap: 0.35rem;
+  }
+  .voice-chip:hover { border-color: var(--accent3); color: var(--accent3); }
+  .voice-chip.active { background: var(--accent3); border-color: var(--accent3); color: #000; }
+  .voice-chip .vdel { color: var(--muted); font-size: 0.6rem; line-height: 1; }
+  .voice-chip.active .vdel { color: rgba(0,0,0,0.4); }
+  .voice-chip .vdel:hover { color: var(--accent2) !important; }
+  .voice-empty { font-size: 0.5rem; color: var(--muted); align-self: center; }
+  .add-voice-row { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
+  .add-voice-btn {
+    background: var(--accent3); border: none; border-radius: var(--radius);
+    color: #000; font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58rem; letter-spacing: 0.13em; text-transform: uppercase;
+    padding: 0.5rem 1rem; cursor: pointer; transition: all 0.12s ease; font-weight: 500; flex-shrink: 0;
+  }
+  .add-voice-btn:hover { background: #fff; }
+  .add-voice-btn:disabled { background: var(--muted); cursor: not-allowed; }
+
   .clone-active-bar {
     display: none; align-items: center; gap: 0.55rem;
     padding: 0.4rem 0.6rem; border: 1px solid var(--accent3); border-radius: var(--radius);
@@ -350,22 +388,36 @@
     </div>
   </div>
 
-  <!-- Voice Clone -->
+  <!-- Voice Library -->
   <div class="card">
-    <button class="collapsible-header" id="cloneToggle">Voice Clone <span class="arrow">▼</span></button>
+    <button class="collapsible-header" id="cloneToggle">Voice Library <span class="arrow">▼</span></button>
     <div class="collapsible-body" id="cloneBody">
-      <div class="clone-active-bar" id="cloneActiveBar">
-        <div class="clone-dot"></div>
-        <span class="clone-name" id="cloneName">No voice loaded</span>
-        <button class="clone-clear" id="cloneClearBtn">Clear</button>
+
+      <!-- Active voice indicator -->
+      <div class="voice-active-bar" id="voiceActiveBar">
+        <div class="voice-dot"></div>
+        <span class="voice-active-name" id="voiceActiveName">No voice active</span>
+        <button class="voice-deactivate" id="voiceDeactivateBtn">Deactivate</button>
       </div>
+
+      <!-- Voice chips -->
+      <div class="voice-library" id="voiceLibrary">
+        <span class="voice-empty">No voices added yet.</span>
+      </div>
+
+      <!-- Add voice form -->
       <div class="file-drop" id="fileDrop">
         <input type="file" id="refAudioFile" accept="audio/*">
         <div class="file-drop-text">Drop audio or <span>click to browse</span><br>mp3 · wav · ogg · m4a · flac</div>
       </div>
+      <label class="input-label">Voice Name</label>
+      <input type="text" class="input-sm" id="voiceNameInput" placeholder="e.g. My Voice, Character Name…">
       <label class="input-label">Reference Text (what the audio says)</label>
       <textarea class="input-sm" id="refText" rows="2" placeholder="Type exactly what is spoken in the reference audio…"></textarea>
-      <button class="load-voice-btn" id="loadVoiceBtn">Load Voice</button>
+      <div class="add-voice-row">
+        <button class="add-voice-btn" id="addVoiceBtn">+ Add to Library</button>
+      </div>
+
     </div>
   </div>
 
@@ -442,6 +494,10 @@ let lastRespText  = '';
 let voiceB64  = null;
 let voiceText = null;
 let voiceName = null;
+
+// Voice library
+let voiceLibrary   = [];
+let activeVoiceIdx = null;
 
 let mediaSource  = null;
 let sourceBuffer = null;
@@ -594,7 +650,7 @@ document.getElementById('presetSaveBtn').addEventListener('click', () => {
 renderPresets();
 
 // ============================================================
-// VOICE CLONE
+// VOICE LIBRARY
 // ============================================================
 const fileDrop = document.getElementById('fileDrop');
 const refAudio = document.getElementById('refAudioFile');
@@ -611,34 +667,67 @@ function updateDropLabel(name) {
   fileDrop.querySelector('.file-drop-text').innerHTML = `<span>${escapeHtml(name)}</span>`;
 }
 
-document.getElementById('loadVoiceBtn').addEventListener('click', () => {
+document.getElementById('addVoiceBtn').addEventListener('click', () => {
   const file = refAudio.files[0];
+  const name = document.getElementById('voiceNameInput').value.trim();
   const ref  = document.getElementById('refText').value.trim();
-  if (!file) return alert('Select an audio file first.');
+  if (!file) return alert('Select an audio file.');
+  if (!name) return alert('Enter a voice name.');
   if (!ref)  return alert('Enter the reference text.');
-  const btn = document.getElementById('loadVoiceBtn');
+  const btn = document.getElementById('addVoiceBtn');
   btn.disabled = true; btn.textContent = 'Loading…';
   const reader = new FileReader();
   reader.onload = () => {
-    voiceB64  = reader.result.split(',')[1];
-    voiceText = ref;
-    voiceName = file.name;
-    document.getElementById('cloneActiveBar').classList.add('visible');
-    document.getElementById('cloneName').textContent = `Voice: ${file.name}`;
-    btn.disabled = false; btn.textContent = 'Voice Loaded ✓';
-    setTimeout(() => { btn.textContent = 'Load Voice'; }, 2000);
+    voiceLibrary.push({ name, b64: reader.result.split(',')[1], text: ref });
+    activateVoice(voiceLibrary.length - 1);
+    refAudio.value = '';
+    document.getElementById('voiceNameInput').value = '';
+    document.getElementById('refText').value = '';
+    fileDrop.querySelector('.file-drop-text').innerHTML = 'Drop audio or <span>click to browse</span><br>mp3 · wav · ogg · m4a · flac';
+    btn.disabled = false; btn.textContent = '+ Add to Library';
   };
   reader.readAsDataURL(file);
 });
 
-document.getElementById('cloneClearBtn').addEventListener('click', () => {
+document.getElementById('voiceDeactivateBtn').addEventListener('click', () => {
+  activeVoiceIdx = null;
   voiceB64 = voiceText = voiceName = null;
-  document.getElementById('cloneActiveBar').classList.remove('visible');
-  refAudio.value = '';
-  document.getElementById('refText').value = '';
-  fileDrop.querySelector('.file-drop-text').innerHTML = 'Drop audio or <span>click to browse</span><br>mp3 · wav · ogg · m4a · flac';
-  document.getElementById('loadVoiceBtn').textContent = 'Load Voice';
+  document.getElementById('voiceActiveBar').classList.remove('visible');
+  renderVoiceLibrary();
 });
+
+function activateVoice(idx) {
+  if (idx < 0 || idx >= voiceLibrary.length) return;
+  activeVoiceIdx = idx;
+  const v = voiceLibrary[idx];
+  voiceB64 = v.b64; voiceText = v.text; voiceName = v.name;
+  document.getElementById('voiceActiveBar').classList.add('visible');
+  document.getElementById('voiceActiveName').textContent = `Voice: ${v.name}`;
+  renderVoiceLibrary();
+}
+
+function renderVoiceLibrary() {
+  const lib = document.getElementById('voiceLibrary');
+  if (!voiceLibrary.length) { lib.innerHTML = '<span class="voice-empty">No voices added yet.</span>'; return; }
+  lib.innerHTML = '';
+  voiceLibrary.forEach((v, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'voice-chip' + (i === activeVoiceIdx ? ' active' : '');
+    chip.innerHTML = `<span>${escapeHtml(v.name)}</span><span class="vdel" data-idx="${i}">✕</span>`;
+    chip.addEventListener('click', e => {
+      if (e.target.classList.contains('vdel')) {
+        const idx = parseInt(e.target.dataset.idx);
+        voiceLibrary.splice(idx, 1);
+        if (activeVoiceIdx === idx) {
+          activeVoiceIdx = null; voiceB64 = voiceText = voiceName = null;
+          document.getElementById('voiceActiveBar').classList.remove('visible');
+        } else if (activeVoiceIdx > idx) { activeVoiceIdx--; }
+        renderVoiceLibrary();
+      } else { activateVoice(i); }
+    });
+    lib.appendChild(chip);
+  });
+}
 
 // ============================================================
 // SPEAK
@@ -647,7 +736,16 @@ document.getElementById('speakBtn').addEventListener('click', () => speak());
 document.getElementById('regenBtn').addEventListener('click', () => { if (lastPrompt) speak(lastPrompt); });
 document.getElementById('stopBtn').addEventListener('click', stopPlayback);
 
+let activeTimer    = null;
+let activeTimeout  = null;
+
+function clearTimers() {
+  if (activeTimer)   { clearInterval(activeTimer);   activeTimer   = null; }
+  if (activeTimeout) { clearTimeout(activeTimeout);  activeTimeout = null; }
+}
+
 function stopPlayback() {
+  clearTimers();
   if (abortCtrl) abortCtrl.abort();
   document.getElementById('audio').pause();
   animateBars(false);
@@ -684,6 +782,36 @@ async function speak(overridePrompt) {
   animateBars(false);
 
   abortCtrl = new AbortController();
+
+  // Elapsed timer shown in status
+  let elapsedSec = 0;
+  activeTimer = setInterval(() => {
+    elapsedSec++;
+    if (elapsedSec < 60) setStatus(`${elapsedSec}s`, true);
+    else setStatus(`${Math.floor(elapsedSec/60)}m${elapsedSec%60}s`, true);
+    // Warn at 45 seconds still thinking
+    if (elapsedSec === 45 && btn.textContent === 'THINKING…') {
+      errorMsg.textContent = '⚠ Still thinking after 45s — Ollama may be loading model into VRAM (can take 5-10 min on first request). Press Esc to cancel.';
+      errorMsg.classList.add('visible');
+    }
+  }, 1000);
+
+  // Client-side timeout — 5 minutes
+  activeTimeout = setTimeout(() => {
+    clearTimers();
+    if (abortCtrl) abortCtrl.abort();
+    errorMsg.textContent = '⚠ Request timed out after 5 minutes. Check that Ollama and Fish pods are running.';
+    errorMsg.classList.add('visible');
+    vizCard.classList.remove('visible');
+    animateBars(false);
+    resetBtn();
+  }, 300000);
+
+  // Cleanup helper
+  function clearTimers() {
+    clearInterval(activeTimer);   activeTimer   = null;
+    clearTimeout(activeTimeout);  activeTimeout = null;
+  }
 
   const customTone = document.getElementById('customTone').value.trim();
   const character  = document.getElementById('character').value.trim();
@@ -752,6 +880,7 @@ async function speak(overridePrompt) {
     });
 
     audio.addEventListener('playing', () => {
+      clearTimers();
       setStatus('Playing', true);
       animateBars(true);
       btn.classList.remove('loading'); btn.classList.add('playing');
@@ -773,6 +902,7 @@ async function speak(overridePrompt) {
     audio.play().catch(() => {});
 
   } catch(err) {
+    clearTimers();
     if (err.name === 'AbortError') return;
     errorMsg.textContent = '⚠ ' + err.message;
     errorMsg.classList.add('visible');
