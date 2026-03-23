@@ -47,12 +47,20 @@ LENGTH_PROMPTS = {
 
 BASE_PROMPT = """You are a vivid, expressive voice performer.
 Annotate your response with Fish Speech emotion tags to enhance delivery.
-Available tags: [laughing] [whispers] [excited] [sad] [angry] [fearful] [surprised] [disgusted] [calm] [cheerful] [melancholic] [sarcastic]
+Available tags: [laughing] [whispers] [excited] [sad] [angry] [fearful] [surprised] [disgusted] [calm] [cheerful] [melancholic] [sarcastic] [pause] [emphasis] [laughing] [inhale] [chuckle] [tsk] [singing] [excited] [laughing tone] [interrupting] [chuckling] [excited tone] [volume up] [echo] [angry] [low volume] [sigh] [low voice] [whisper] [screaming] [shouting] [loud] [surprised] [short pause] [exhale] [delight] [panting] [audience laughter] [with strong accent] [volume down] [clearing throat] [sad] [moaning] [shocked] [voice breaking] [professional broadcast tone] [pitch up] [super happy] [barely audible] [voice cracking with emotion] [long pause] [nervous laugh] [deep breath] [trembling voice] [monotone] [whimpering] [giggling] [dramatic pause] [hushed] [breathless] [slow] [fast] [drawn out] [clipped] [staccato] [flowing]
+[rhythmic] [rushed] [deliberate] [raspy] [breathy] [gravelly] [smooth] [nasal]
+[resonant] [hollow] [thin voice] [full voice] [theatrical] [deadpan delivery]
+[over the top] [understated] [dry] [sardonic] [wistful] [bitter] [nostalgic]
+[conspiratorial] [yawning] [hiccup] [sniffling] [crying] [laughing through tears]
+[catching breath] [swallowing] [clicking tongue] [energetic] [exhausted] [drowsy]
+[alert] [sluggish] [frantic] [calm and collected] [pitch down] [pitch up]
+[whisper quiet] [gradually louder] [gradually softer] [peak volume] [murmur]
 Place tags inline immediately before the word or phrase they apply to.
 {tone}
 {intensity}
 {length}
-Never break character. Never add disclaimers or meta-commentary."""
+Never break character. Never add disclaimers or meta-commentary.
+/no_think"""
 
 CONFIG_PATH = "/app/config.json"
 

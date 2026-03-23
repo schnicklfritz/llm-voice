@@ -400,6 +400,172 @@
     text-align: center;
   }
 
+  /* ---- Voice Clone ---- */
+  .clone-toggle {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--muted2);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0;
+    text-align: left;
+    margin-bottom: 0;
+    transition: color 0.12s ease;
+  }
+
+  .clone-toggle:hover { color: var(--accent); }
+
+  .clone-toggle::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .clone-toggle .arrow {
+    font-size: 0.5rem;
+    transition: transform 0.2s ease;
+    margin-left: 0.25rem;
+  }
+
+  .clone-toggle.open .arrow { transform: rotate(180deg); }
+  .clone-toggle.open { color: var(--accent); }
+
+  .clone-body {
+    display: none;
+    margin-top: 1rem;
+  }
+
+  .clone-body.open { display: block; }
+
+  .clone-active-bar {
+    display: none;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--accent3);
+    border-radius: var(--radius);
+    margin-bottom: 0.75rem;
+    background: rgba(0, 212, 255, 0.05);
+  }
+
+  .clone-active-bar.visible { display: flex; }
+
+  .clone-active-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent3);
+    flex-shrink: 0;
+    animation: pulse-dot 1.5s ease infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.3; }
+  }
+
+  .clone-active-name {
+    font-size: 0.6rem;
+    color: var(--accent3);
+    letter-spacing: 0.1em;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .clone-clear-btn {
+    background: transparent;
+    border: 1px solid var(--muted);
+    color: var(--muted2);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: all 0.12s ease;
+    flex-shrink: 0;
+  }
+
+  .clone-clear-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .file-drop {
+    border: 1px dashed var(--border2);
+    border-radius: var(--radius);
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    margin-bottom: 0.75rem;
+    position: relative;
+  }
+
+  .file-drop:hover, .file-drop.dragover {
+    border-color: var(--accent3);
+    background: rgba(0, 212, 255, 0.03);
+  }
+
+  .file-drop input[type=file] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .file-drop-text {
+    font-size: 0.6rem;
+    color: var(--muted2);
+    letter-spacing: 0.1em;
+    pointer-events: none;
+  }
+
+  .file-drop-text span { color: var(--accent3); }
+
+  .ref-text-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+
+  .ref-textarea {
+    min-height: 60px;
+  }
+
+  .load-btn {
+    width: 100%;
+    background: var(--accent3);
+    border: none;
+    border-radius: var(--radius);
+    color: #000;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.6rem;
+    cursor: pointer;
+    margin-top: 0.75rem;
+    transition: all 0.12s ease;
+    font-weight: 500;
+  }
+
+  .load-btn:hover { background: #fff; }
+  .load-btn:disabled { background: var(--muted); cursor: not-allowed; }
+
   @media (max-width: 480px) {
     .slider-grid { grid-template-columns: 1fr; }
   }
@@ -485,6 +651,25 @@
     </div>
   </div>
 
+  <!-- Voice Clone -->
+  <div class="card">
+    <button class="clone-toggle" id="cloneToggle">Voice Clone <span class="arrow">▼</span></button>
+    <div class="clone-body" id="cloneBody">
+      <div class="clone-active-bar" id="cloneActiveBar">
+        <div class="clone-active-dot"></div>
+        <span class="clone-active-name" id="cloneActiveName">No voice loaded</span>
+        <button class="clone-clear-btn" id="cloneClearBtn">Clear</button>
+      </div>
+      <div class="file-drop" id="fileDrop">
+        <input type="file" id="refAudioFile" accept="audio/*">
+        <div class="file-drop-text">Drop audio file or <span>click to browse</span><br>mp3 · wav · ogg · m4a · flac</div>
+      </div>
+      <label class="ref-text-label">Reference Text (what the audio says)</label>
+      <textarea class="ref-textarea" id="refText" placeholder="Type exactly what is spoken in the reference audio…"></textarea>
+      <button class="load-btn" id="loadVoiceBtn">Load Voice</button>
+    </div>
+  </div>
+
   <!-- Prompt -->
   <div class="card">
     <div class="card-label">Prompt</div>
@@ -527,6 +712,86 @@
   let isAppending      = false;
   let streamDone       = false;
   let animFrame        = null;
+
+  // Voice clone state — persists for session
+  let voiceCloneB64    = null;
+  let voiceCloneText   = null;
+  let voiceCloneName   = null;
+
+  // ---- Voice Clone ----
+  const cloneToggle  = document.getElementById('cloneToggle');
+  const cloneBody    = document.getElementById('cloneBody');
+  const cloneActiveBar  = document.getElementById('cloneActiveBar');
+  const cloneActiveName = document.getElementById('cloneActiveName');
+  const fileDrop     = document.getElementById('fileDrop');
+  const refAudioFile = document.getElementById('refAudioFile');
+  const loadVoiceBtn = document.getElementById('loadVoiceBtn');
+
+  cloneToggle.addEventListener('click', () => {
+    cloneToggle.classList.toggle('open');
+    cloneBody.classList.toggle('open');
+  });
+
+  // Drag and drop
+  fileDrop.addEventListener('dragover', e => { e.preventDefault(); fileDrop.classList.add('dragover'); });
+  fileDrop.addEventListener('dragleave', () => fileDrop.classList.remove('dragover'));
+  fileDrop.addEventListener('drop', e => {
+    e.preventDefault();
+    fileDrop.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) {
+      refAudioFile.files = e.dataTransfer.files;
+      updateFileDropLabel(e.dataTransfer.files[0].name);
+    }
+  });
+
+  refAudioFile.addEventListener('change', () => {
+    if (refAudioFile.files[0]) updateFileDropLabel(refAudioFile.files[0].name);
+  });
+
+  function updateFileDropLabel(name) {
+    fileDrop.querySelector('.file-drop-text').innerHTML =
+      `<span>${name}</span>`;
+  }
+
+  loadVoiceBtn.addEventListener('click', async () => {
+    const file    = refAudioFile.files[0];
+    const refText = document.getElementById('refText').value.trim();
+    if (!file) { alert('Please select an audio file.'); return; }
+    if (!refText) { alert('Please enter the reference text.'); return; }
+
+    loadVoiceBtn.disabled = true;
+    loadVoiceBtn.textContent = 'Loading...';
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const b64 = reader.result.split(',')[1];
+      voiceCloneB64  = b64;
+      voiceCloneText = refText;
+      voiceCloneName = file.name;
+
+      // Show active indicator
+      cloneActiveBar.classList.add('visible');
+      cloneActiveName.textContent = `Voice: ${file.name}`;
+
+      loadVoiceBtn.disabled = false;
+      loadVoiceBtn.textContent = 'Voice Loaded ✓';
+      setTimeout(() => { loadVoiceBtn.textContent = 'Load Voice'; }, 2000);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('cloneClearBtn').addEventListener('click', () => {
+    voiceCloneB64  = null;
+    voiceCloneText = null;
+    voiceCloneName = null;
+    cloneActiveBar.classList.remove('visible');
+    cloneActiveName.textContent = 'No voice loaded';
+    refAudioFile.value = '';
+    document.getElementById('refText').value = '';
+    fileDrop.querySelector('.file-drop-text').innerHTML =
+      'Drop audio file or <span>click to browse</span><br>mp3 · wav · ogg · m4a · flac';
+    loadVoiceBtn.textContent = 'Load Voice';
+  });
 
   // ---- Mode ----
   document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -647,7 +912,9 @@
       length:            currentLength,
       format:            'mp3',
       speed:             parseFloat(speedSlider.value),
-      stream:            true
+      stream:            true,
+      voice_reference_audio_b64: voiceCloneB64 || null,
+      voice_reference_text:      voiceCloneText || null
     };
 
     try {
