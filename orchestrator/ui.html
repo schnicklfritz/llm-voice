@@ -857,32 +857,63 @@ async function speak(overridePrompt) {
     });
 
     if (!resp.ok) { const t = await resp.text(); throw new Error(t || resp.statusText); }
+try {
+    const resp = await fetch('/speak', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: abortCtrl.signal,
+    });
 
-    mediaSource = new MediaSource();
-    audio.src = URL.createObjectURL(mediaSource);
+    if (!resp.ok) { const t = await resp.text(); throw new Error(t || resp.statusText); }
 
-    mediaSource.addEventListener('sourceopen', async () => {
-      try { sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg'); }
-      catch(e) { throw new Error('MP3 streaming not supported: ' + e.message); }
-      sourceBuffer.addEventListener('updateend', processQueue);
+    btn.textContent = 'LOADING…';
+    setStatus('Loading', true);
 
-      btn.textContent = 'STREAMING…';
-      setStatus('Buffering', true);
-      respCard.classList.add('visible');
-      respText.innerHTML = '<em style="color:var(--muted)">Generating…</em>';
+    const arrayBuf = await resp.arrayBuffer();
+    clearTimers();
 
-      const reader = resp.body.getReader();
-      const chunks = [];
-      let first = true;
+    const blob = new Blob([arrayBuf], { type: 'audio/mpeg' });
+    const url  = URL.createObjectURL(blob);
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) { streamDone = true; processQueue(); break; }
-        chunks.push(value);
-        audioQueue.push(value);
-        if (first) { first = false; processQueue(); }
+    audio.src = url;
+    respCard.classList.add('visible');
+    respText.innerHTML = '<em style="color:var(--muted2)">Playing…</em>';
+
+    audio.addEventListener('playing', () => {
+      setStatus('Playing', true);
+      animateBars(true);
+      btn.classList.remove('loading'); btn.classList.add('playing');
+      btn.textContent = 'PLAYING';
+    }, { once: true });
+
+    audio.addEventListener('ended', () => {
+      setStatus('Done', false);
+      animateBars(false);
+      regenBtn.classList.add('visible');
+      URL.revokeObjectURL(url);
+      if (useHistory) {
+        conversationHistory.push({ role: 'user', content: prompt });
+        if (conversationHistory.length > 20) conversationHistory = conversationHistory.slice(-20);
       }
+      resetBtn();
+    }, { once: true });
 
+    const histBlob = new Blob([arrayBuf], { type: 'audio/mpeg' });
+    addToHistory(prompt, URL.createObjectURL(histBlob));
+
+    audio.play().catch(e => { throw new Error('Playback failed: ' + e.message); });
+
+  } catch(err) {
+    clearTimers();
+    if (err.name === 'AbortError') return;
+    errorMsg.textContent = '⚠ ' + err.message;
+    errorMsg.classList.add('visible');
+    vizCard.classList.remove('visible');
+    animateBars(false);
+    resetBtn();
+  }
+}
       // Save to audio history
       const blob = new Blob(chunks, { type: 'audio/mpeg' });
       const url  = URL.createObjectURL(blob);
